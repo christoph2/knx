@@ -404,16 +404,16 @@ def main():
 vd_exporter: export / convert ETS 'vd?' and 'pr?' files to XML.
 """
     print
-    if len(sys.argv) != 3:
-        print "usage: vd_exporter password filespec"
+    if len(sys.argv) != 2:
+        print "usage: vd_exporter filespec"
         sys.exit(1)
     else:
-        if len(glob.glob(sys.argv[2])) == 0:
+        if len(glob.glob(sys.argv[1])) == 0:
             print "filespec does not match."
             sys.exit(1)
         password = sys.argv[1]
-        for filename in glob.glob(sys.argv[2]):
-            run(filename, password)
+        for filename in glob.glob(sys.argv[1]):
+            run(filename, 'Orleander')
 
 if __name__ == '__main__':
     main()
