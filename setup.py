@@ -14,7 +14,7 @@ setup(
     description = "'Konnex / EIB Reverserz Toolkit",
     author = 'Christoph Schueler',
     author_email = 'cpu12.gems@googlemail.com',
-    url = 'https://www.github.com/Christoph2/knxReTk',
+    url = 'https://www.github.com/Christoph2/knx',
     packages = packagez('knxReTk'),
     entry_points = {
 	'console_scripts': [

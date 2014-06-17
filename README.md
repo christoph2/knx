@@ -1,7 +1,13 @@
-knx
-===
+knxReTk
+=======
 
-Forthcoming: A project decrypting some of Konnex/EIB secrects...
+### The Konnex / EIB Reverserz Toolkit
 
-The  Konnex / EIB Reverserz Toolkit currently contains:
-	* A utility to export ETS .vd? and .pr? files to XML.
+A project revealing some of Konnex/EIB secrets...
+
+#### Contents: 
+
+- `vd_exporter.py`: Export your ETS .vd? and .pr? files to XML.
+
+- Some memory (ROM) images of BCUs.
+
