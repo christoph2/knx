@@ -85,11 +85,11 @@ class Symbols(object):
                         print "*** NO MATCH [%s] ***" % line
         self._items = {}
         for name, section in self.sections.items():
-            if name[0] == mask or name[0] == mcu: #  or (name[0] in 'EIBCommon', 'EEPROMProlog'):
+            if (name[0] == mask or name[0] == mcu) or (name[0] == 'EIBCommon' or name[0] == 'EEPROMProlog'):
                 if len(name) > 1 and name[1] == 'MemoryMap':
                     self.memoryMap = section
                 else:
-                    print name #, section
+                    #print name #, section
                     self._items.update(dict([(item.value, item.name) for item in section]))
     @property
     def interruptVectors(self):
