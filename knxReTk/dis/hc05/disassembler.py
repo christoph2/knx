@@ -206,7 +206,7 @@ class Disassembler(object):
         self.callTargets = set(tuple([self.getWord(e) for e in indirectAddresses])).union(set(directAddresses))
         self.jumpTargets = set()
         self.processed = set()
-        print "Call-Targets: ", [hex(x) for x in self.callTargets]
+        #print "Call-Targets: ", [hex(x) for x in self.callTargets]
         print sorted([hex(x) for x in self.jumpTargets])
 
     def disassemble(self):
@@ -238,7 +238,7 @@ class Disassembler(object):
             if line.opcode in RETURNS:
                 break
         self.processed.add(origAddress)
-        print "-" * 80
+        #print "-" * 80
         while self.jumpTargets:
             target = self.jumpTargets.pop()
             if not self.memoryExplorer.isExplored(target):
@@ -258,11 +258,11 @@ class Disassembler(object):
             raise IllegalOpcode("0x%02x [Address: 0x%04x]" % (op, address, ))
         else:
             operation = Operation(address, opcodeSize, '', op, opcodeName, operand, operandData, addressingMode, '')
-            print "$%04x %02x %s"   % (address, op, operation.formatOperandData()),
-            print opcodeName,
+            #print "$%04x %02x %s"   % (address, op, operation.formatOperandData()),
+            #print opcodeName,
 
             displayString, destination = operation.processes()
-            print displayString
+            #print displayString
 
             self.memoryExplorer.setExplored(address, opcodeSize)
             newAddress = address + opcodeSize
@@ -294,7 +294,7 @@ def main():
 
     interruptVectors = [v.value for v in symbols.interruptVectors]
     #interruptVectors = [0x7ffe]
-    disassembler = Disassembler(OPCODES, r"..\pyKNX\bcu20.bin", symbols, interruptVectors, [])
+    disassembler = Disassembler(OPCODES, r"C:\projekte\csProjects\pyKNX\bcu20.bin", symbols, interruptVectors, [])
     operations = disassembler.disassemble()
     print "=" * 80
     pprint(sorted(operations, key = lambda o: o.address))
