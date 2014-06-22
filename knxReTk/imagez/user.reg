@@ -1,0 +1,58 @@
+[BCU12.labels]
+
+[BCU12.comments]
+
+[BCU20.labels]
+AllocBuf_Impl           = 0x5284
+PopBuf_Impl             = 0x5409
+FreeBuf_Impl            = 0x5430
+rolA1_Impl              = 0x729d
+rolA3_Impl              = 0x7299
+rolA4_Impl              = 0x7297
+rolA7_Impl              = 0x7295
+shlA4_Impl              = 0x7348
+shlA5_Impl              = 0x7347
+shlA7_Impl              = 0x7345
+shrA5_Impl              = 0x734f
+shrA6_Impl              = 0x734e
+shrA7_Impl              = 0x734d
+divDE_BC_Impl           = 0x72c6
+TM_GetFlg_Impl          = 0x76c5
+TM_Load_Impl            = 0x759c
+EEsetChecksum_Impl      = 0x7b07
+EEwrite_Impl            = 0x7b0b
+S_AstShift_Impl         = 0x6ebb
+S_LastShift_Impl        = 0x6eb9
+U_SerialShift_Impl      = 0x6ede
+U_deb10_Impl            = 0x7359
+U_deb30_Impl            = 0x7355
+U_debounce_Impl         = 0x735b
+U_Delay_Impl            = 0x7b68
+U_delMsgs_Impl          = 0x542b
+U_flagsGet_Impl         = 0x608c
+U_flagsSet_Impl         = 0x60d9
+U_GetTM_Impl            = 0x7426
+U_GetTMx_Impl           = 0x7420
+U_ioAST_Impl            = 0x7479
+U_map_Impl              = 0x7375
+U_readAD_Impl           = 0x740a
+U_SetTM_Impl            = 0x746f
+U_SetTMx_Impl           = 0x746b
+U_GetBit_Impl           = 0x74a8
+U_SetBit_Impl           = 0x74b4
+U_testObj_Impl          = 0x6091
+U_transRequest_Impl     = 0x60bd
+AL_SAPcallback_Impl     = 0x5ed0
+FP_Int2Flt_Impl         = 0x7507
+FP_Flt2Int_Impl         = 0x74c4
+U_MS_Switch_Impl        = 0x5205
+U_MS_Post_Impl          = 0x53f4
+U_TS_Set_Impl           = 0x75c5
+U_TS_Del_Impl           = 0x75f1
+U_EE_WriteBlock_Impl    = 0x7ad6
+U_FT12_GetStatus_Impl   = 0x7bb0
+U_SCI_Init_Impl         = 0x726f
+U_SPI_Init_Impl         = 0x7231
+U_TS_Seti_Impl          = 0x7561
+
+[BCU20.comments]

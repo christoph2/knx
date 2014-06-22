@@ -305,15 +305,18 @@ def main():
     mask = 'BCU20'
     symbols = Symbols(readConfigData('knxReTk', 'eib.reg'), mcu, mask)
 
-    #if os.access('user.reg', os.F_OK):
-    #    userSymbols = Symbols('user.reg', )
+    if os.access('user.reg', os.F_OK):
+        userSymbols = Symbols(open('user.reg').read(), mcu, mask)
+        for name, value in userSymbols.sections[(mask, 'labels')]:
+            symbols._items[value] = name
 
     interruptVectors = [v.value for v in symbols.interruptVectors]
     jumpTable = [s.value for s in symbols.sections[(mask, 'API', )]]
     disassembler = Disassembler(OPCODES, r".\pyKNX\bcu20.bin", symbols, interruptVectors, jumpTable)
     operations = disassembler.disassemble()
     print "=" * 80
-    pprint(sorted(operations, key = lambda o: o.address))
+    for line in sorted(operations, key = lambda o: o.address):
+        print line
     print "=" * 80
 
 
