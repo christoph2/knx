@@ -28,6 +28,8 @@ __author__  = 'Christoph Schueler'
 __version__ = '0.1.0'
 
 import os
+from pprint import pprint
+import sys
 
 from knxReTk.utilz.logger import logger
 from knxReTk.executionModel.memory import ReadWriteMemory
@@ -36,10 +38,6 @@ from knxReTk.dis.hc05.opcode_map import OPCODES, ILLEGAL_OPCODES, CALLS, JUMPS, 
 import knxReTk.dis.hc05.opcode_map as opcode_map
 from knxReTk.config.symbols import Symbols
 from knxReTk.utilz.config import readConfigData
-
-
-from pprint import pprint
-
 
 class Entry(object):
 
@@ -103,6 +101,9 @@ class Operation(Entry):
         self.operandData = operandData
         self.addressingMode = addressingMode
         self.comment = comment
+
+    def __hash__(self):
+        return hash(self.address)
 
 
     def __str__(self):
@@ -297,13 +298,22 @@ class Disassembler(object):
 
 
 def main():
-    from pprint import pprint
-
     #print os.getcwd()
 
-    mcu = 'HC05BE12'
-    mask = 'BCU20'
+    #mcu = 'HC05BE12'
+    #mask = 'BCU20'
+    #fileName = r".\knxReTk\imagez\bcu20.bin"
+
+    mcu = 'HC05B6'
+    mask = 'BCU12'
+    fileName = r".\knxReTk\imagez\bcu12.bin"
+
+    sys.argv.extend([fileName, mcu, mask])
+
     symbols = Symbols(readConfigData('knxReTk', 'eib.reg'), mcu, mask)
+
+    if len(sys.argv) < 3:
+        print "usage: eib_disassemble: file mcu mask"
 
     if os.access('user.reg', os.F_OK):
         userSymbols = Symbols(open('user.reg').read(), mcu, mask)
@@ -311,8 +321,9 @@ def main():
             symbols._items[value] = name
 
     interruptVectors = [v.value for v in symbols.interruptVectors]
-    jumpTable = [s.value for s in symbols.sections[(mask, 'API', )]]
-    disassembler = Disassembler(OPCODES, r".\pyKNX\bcu20.bin", symbols, interruptVectors, jumpTable)
+    additionalEntries = [s.value for s in symbols.sections[(mask, 'API', )]]
+
+    disassembler = Disassembler(OPCODES, fileName, symbols, interruptVectors, additionalEntries)
     operations = disassembler.disassemble()
     print "=" * 80
     for line in sorted(operations, key = lambda o: o.address):
