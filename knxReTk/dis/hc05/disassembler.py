@@ -27,8 +27,9 @@ __copyright__ = """
 __author__  = 'Christoph Schueler'
 __version__ = '0.1.0'
 
-from knxReTk.utilz.logger import logger
+import os
 
+from knxReTk.utilz.logger import logger
 from knxReTk.executionModel.memory import ReadWriteMemory
 from knxReTk.dis.explorer import MemoryExplorer
 from knxReTk.dis.hc05.opcode_map import OPCODES, ILLEGAL_OPCODES, CALLS, JUMPS, RETURNS
@@ -106,7 +107,9 @@ class Operation(Entry):
 
     def __str__(self):
         displayString, _ = self.processes()
-        return "$%04x %02x %s %s %s" % (self.address, self.opcode, self.formatOperandData(), self.opcodeName, displayString)
+        return "$%04x %02x %s    %-20s %s %s" % (
+            self.address, self.opcode, self.formatOperandData(), self.label, self.opcodeName, displayString
+        )
 
     __repr__ = __str__
 
@@ -257,7 +260,12 @@ class Disassembler(object):
         if op in ILLEGAL_OPCODES:
             raise IllegalOpcode("0x%02x [Address: 0x%04x]" % (op, address, ))
         else:
-            operation = Operation(address, opcodeSize, '', op, opcodeName, operand, operandData, addressingMode, '')
+            if address in Operation.symbols:
+                #print "0x%04x ==> %s" % (address, Operation.symbols[address])
+                label = Operation.symbols[address]
+            else:
+                label = ''
+            operation = Operation(address, opcodeSize, label, op, opcodeName, operand, operandData, addressingMode, '')
             #print "$%04x %02x %s"   % (address, op, operation.formatOperandData()),
             #print opcodeName,
 
@@ -290,11 +298,19 @@ class Disassembler(object):
 
 def main():
     from pprint import pprint
-    symbols = Symbols(readConfigData('knxReTk', 'eib.reg'), 'HC05BE12', 'BCU20')
+
+    #print os.getcwd()
+
+    mcu = 'HC05BE12'
+    mask = 'BCU20'
+    symbols = Symbols(readConfigData('knxReTk', 'eib.reg'), mcu, mask)
+
+    #if os.access('user.reg', os.F_OK):
+    #    userSymbols = Symbols('user.reg', )
 
     interruptVectors = [v.value for v in symbols.interruptVectors]
-    #interruptVectors = [0x7ffe]
-    disassembler = Disassembler(OPCODES, r"C:\projekte\csProjects\pyKNX\bcu20.bin", symbols, interruptVectors, [])
+    jumpTable = [s.value for s in symbols.sections[(mask, 'API', )]]
+    disassembler = Disassembler(OPCODES, r".\pyKNX\bcu20.bin", symbols, interruptVectors, jumpTable)
     operations = disassembler.disassemble()
     print "=" * 80
     pprint(sorted(operations, key = lambda o: o.address))
