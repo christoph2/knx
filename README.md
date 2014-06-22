@@ -11,3 +11,15 @@ A project revealing some of Konnex/EIB secrets...
 
 - Some memory (ROM) images of BCUs.
 
+
+#### What can knReTk do for me?
+
+Disassemble (comming soon) BCU ROMs and application programs from ETS database entries.
+
+#### Miscellaneous
+Other Tools, e.g. to create database entries available on request.
+
+Also notice my [KONNEX/EIB protocol stack](https://github.com/christoph2/K-Stack).
+
+----------
+Have fun, dude!

@@ -1,0 +1,466 @@
+##
+##
+##
+[HC05Common]
+
+[HC05B6.Registers]
+PortA   = 0x00
+PortB   = 0x01
+PortC   = 0x02
+PortD   = 0x03
+DDRA    = 0x04
+DDRB    = 0x05
+DDRC    = 0x06
+EECTL   = 0x07
+ADDATA  = 0x08
+ADSTAT  = 0x09
+PLMA    = 0x0a
+PLMB    = 0x0b
+MISC    = 0x0c
+BAUD    = 0x0d
+SCCR1   = 0x0e
+SCCR2   = 0x0f
+SCSR    = 0x10
+SCDR    = 0x11
+TCR     = 0x12
+TSR     = 0x13
+ICR1H   = 0x14
+ICR1L   = 0x15
+OCR1H   = 0x16
+OCR1L   = 0x17
+TCNTH   = 0x18
+TCNTL   = 0x19
+ACNTH   = 0x1a
+ACNTL   = 0x1b
+ICR2H   = 0x1c
+ICR2L   = 0x1d
+OCR2H   = 0x1e
+OCR2L   = 0x1f
+OPTION  = 0x100
+
+[HC05B6.MemoryMap]
+IORegs  = 0x0000, 0x001F, RW
+ZROM    = 0x0020, 0x004F, R
+ZRAM    = 0x0050, 0x00FF, RW
+EEPROM  = 0x0100, 0x01FF, RX
+SCROM1  = 0x0200, 0x02BF, RX
+UserROM = 0x0800, 0x1EFF, RX
+SCROM2  = 0x1f00, 0x1FEF, RX
+Vectors = 0x1FF2, 0x1FFF, R
+
+[HC05B6.Vectors]
+SCI_VECTOR      = 0x1FF2
+TOF_VECTOR      = 0x1FF4
+TOC12_VECTOR    = 0x1FF6
+TIC12_VECTOR    = 0x1FF8
+IRQ_VECTOR      = 0x1FFA
+SWI_VECTOR      = 0x1FFC
+RESET_VECTOR    = 0x1FFE
+
+[HC05BE12.MemoryMap]
+IORegs  = 0x0000, 0x001F, RW
+ZROM    = 0x0020, 0x004F, R
+ZRAM    = 0x0050, 0x00FF, RW
+EEPROM  = 0x0100, 0x046F, RX
+SysEEP  = 0x0470, 0x04DF, R
+protEEP = 0x04E0, 0x04FF, R
+hiRAM   = 0x0900, 0x09CF, RW
+sysROM  = 0x5000, 0x7E7F, RX
+bootROM = 0x7E80, 0x7FDF, RX
+bootVectors = 0x7FE0, 0x7FEF, R
+sysVectors  = 0x7FF0, 0x7FFF, R
+
+[HC05BE12.Vectors]
+BL_TIMER16_VECTOR               = 0x7FE0
+BL_SPI_VECTOR                   = 0x7FE2
+BL_SCI_VECTOR                   = 0x7FE4
+BL_EIBUS_VECTOR                 = 0x7FE6
+BL_CORE_TIMER_VECTOR            = 0x7FE8
+BL_IRQ_VECTOR                   = 0x7FEA
+BL_SWI_VECTOR                   = 0x7FEC
+BL_RESET_VECTOR                 = 0x7FEE
+TIMER16_VECTOR                  = 0x7FF0
+SPI_VECTOR                      = 0x7FF2
+SCI_VECTOR                      = 0x7FF4
+EIBUS_VECTOR                    = 0x7FF6
+CORE_TIMER_VECTOR               = 0x7FF8
+IRQ_VECTOR                      = 0x7FFA
+SWI_VECTOR                      = 0x7FFC
+RESET_VECTOR                    = 0x7FFE
+
+
+[HC05BE12.Registers]
+PortA   = 0x00
+PortB   = 0x01
+PortC   = 0x02
+PortD   = 0x03
+DDRA    = 0x04
+DDRB    = 0x05
+DDRC    = 0x06
+# MISC equ $07
+TCSR    = 0x08
+TCNT    = 0x09
+PLMA    = 0x0A
+PLMB    = 0x0B
+MISC    = 0x0C
+BAUD    = 0x0D
+SCCR1   = 0x0E
+SCCR2   = 0x0F
+SCSR    = 0x10
+SCDAT   = 0x11
+SPCR    = 0x12
+SPSR    = 0x13
+SPDAT   = 0x14
+ADDATA  = 0x15
+ADSTAT  = 0x16
+# 0x17 - unused
+BE_CTL          = 0x18
+BE_INTFLG       = 0x19
+BE_INTMSK       = 0x1A
+BE_GPR0         = 0x1B
+BE_GPR1         = 0x1C
+BE_GPR2         = 0x1D
+BE_GPR3         = 0x1E
+TEST    = 0x1F
+# P0_EPROM equ $20 ; ????
+# PO_EPROM equ $2f ; ????
+TCAPAH  = 0x30
+TCAPAL  = 0x31
+TCMPAH  = 0x32
+TCMPAL  = 0x33
+TCAPBH  = 0x34
+TCAPBL  = 0x35
+TCMPBH  = 0x36
+TCMPBL  = 0x37
+TCH     = 0x38
+TCL     = 0x39
+ACH     = 0x3A
+ACL     = 0x3B
+TCR1    = 0x3C
+TCR2    = 0x3D
+TSR     = 0x3E
+ECTL    = 0x3F
+
+
+OPTION  = 0x100
+PCMX0   = 0x0FD0
+PCMX1   = 0x0FD1
+
+
+[EIBCommon]
+OrTab = 0x20[8]
+AndTab = 0x28[8]
+RegB = 0x50
+RegC = 0x51
+RegD = 0x52
+RegE = 0x53
+RegF = 0x54
+RegG = 0x55
+RegH = 0x56
+RegI = 0x57
+RegJ = 0x58
+RegK = 0x59
+RegL = 0x5A
+RegM = 0x5B
+RegN = 0x5C
+
+# 0x005D 0x005F         --reserved--    3       System Software
+# 0x0061 0x00CD         --reserved--    113     System Software
+# 0x00CE 0x00DF         UserRAM         18      RAM-Area for Comms-Object-and Application-Data
+# 0x00E0 0x00FF         reserved        32      System Software and Stack Space
+
+SystemState     = 0x60
+
+[BCU20.IRegisters]
+iRegB = 0x5D
+iRegC = 0x5E
+iRegD = 0x5F
+
+[EEPROMProlog]
+ManDataH = 0x101
+ManDataL = 0x102
+ManufacturerH = 0x103
+ManufacturerL = 0x104
+DevTypeH = 0x105
+DevTypeL = 0x106
+UsrPrgVersion = 0x107
+EECheckLim = 0x108
+PEI_Type_expected = 0x109
+SyncRate = 0x10a
+PortCDDR = 0x10b
+PortADDR = 0x10c
+RunError = 0x10d
+RouteCnt = 0x10e
+MxRstCnt = 0x10f
+ConfigDes = 0x110
+AssocTabPtr = 0x111
+CommsTabPtr = 0x112
+UsrInitPtr = 0x113
+UsrPrgPtr = 0x114
+UsrSavePtr = 0x115
+AddrTab =  0x116
+
+[BCU10.API]
+U_flagsGet = 0x0c8c
+U_flagsSet = 0x0c94
+U_transRequest = 0x0d91
+EEwrite =    0x0c2d
+EEsetChecksum = 0x0c5d
+U_debounce = 0x0c64
+U_delMsgs =  0x0c82
+U_readAD =   0x0d35
+U_map =      0x0c9b
+U_ioAST =    0x0da7
+S_AstShift = 0x1103
+S_LastShift =0x1101
+TM_Load =    0x0e0c
+TM_GetFlg =  0x0e2a
+U_SetTM =    0x0d8a
+U_GetTM =    0x0d4d
+U_Delay =    0x0ddb
+AllocBuf =   0x116a
+FreeBuf =    0x118c
+PopBuf =     0x11ac
+multDE_FG =  0x0b3c
+divDE_BC =   0x0afc
+shlA4 =      0x0b9a
+shlA5 =      0x0b99
+shlA6 =      0x0b98
+shlA7 =      0x0b97
+shrA4 =      0x0bda
+shrA5 =      0x0bd9
+shrA6 =      0x0bd8
+shrA7 =      0x0bd7
+U_SetBit =   0x0df9
+U_GetBit =   0x0ded
+
+[BCU11.API]
+U_flagsGet = 0x0c9d
+U_flagsSet = 0x0cb3
+U_testObj = 0x0ca5
+U_transRequest = 0x0db9
+EEwrite = 0x0c38
+EEsetChecksum = 0x0c68
+U_debounce = 0x0c75
+U_deb10 = 0x0c73
+U_deb30 = 0x0c6f
+U_delMsgs = 0x0c93
+U_readAD = 0x0d54
+U_map = 0x0cba
+U_ioAST = 0x0dcf
+S_AstShift = 0x1117
+S_LastShift = 0x1115
+TM_Load = 0x0e2b
+TM_GetFlg = 0x0e49
+U_SetTM = 0x0db3
+U_SetTMx = 0x0daf
+U_GetTM = 0x0d71
+U_GetTMx = 0x0d6c
+U_Delay = 0x0dfa
+AllocBuf = 0x117e
+FreeBuf = 0x11a0
+PopBuf = 0x11c0
+multDE_FG = 0x0b4b
+divDE_BC = 0x0b0b
+shlA4 = 0x0ba9
+shlA5 = 0x0ba8
+shlA6 = 0x0ba7
+shlA7 = 0x0ba6
+shrA4 = 0x0be9
+shrA5 = 0x0be8
+shrA6 = 0x0be7
+shrA7 = 0x0be6
+U_SetBit = 0x0e18
+U_GetBit = 0x0e0c
+
+[BCU12.API]
+U_flagsGet = 0x0c9d
+U_flagsSet = 0x0cb3
+U_testObj = 0x0ca5
+U_transRequest = 0x0db9
+EEwrite = 0x0c38
+EEsetChecksum = 0x0c68
+U_debounce = 0x0c75
+U_deb10 = 0x0c73
+U_deb30 = 0x0c6f
+U_delMsgs = 0x0c93
+U_readAD = 0x0d54
+U_map = 0x0cba
+U_ioAST = 0x0dcf
+S_AstShift = 0x1117
+S_LastShift = 0x1115
+U_SerialShift = 0x0c90
+TM_Load = 0x0e2b
+TM_GetFlg = 0x0e49
+U_SetTM = 0x0db3
+U_SetTMx = 0x0daf
+U_GetTM = 0x0d71
+U_GetTMx = 0x0d6c
+U_Delay = 0x0dfa
+AllocBuf = 0x117e
+FreeBuf = 0x11a0
+PopBuf = 0x11c0
+multDE_FG = 0x0b4b
+divDE_BC = 0x0b0b
+shlA4 = 0x0ba9
+shlA5 = 0x0ba8
+shlA6 = 0x0ba7
+shlA7 = 0x0ba6
+shrA4 = 0x0be9
+shrA5 = 0x0be8
+shrA6 = 0x0be7
+shrA7 = 0x0be6
+rolA1 = 0x0af4
+rolA2 = 0x0af2
+rolA3 = 0x0af0
+rolA4 = 0x0aee
+rolA7 = 0x0aec
+U_SetBit = 0x0e18
+U_GetBit = 0x0e0c
+
+[BCU20.API]
+U_flagsGet = 0x505a
+U_flagsSet = 0x505d
+U_testObj = 0x507B
+U_transRequest = 0x507E
+AL_SAPcallback = 0x5081
+EEwrite = 0x503F
+EEsetChecksum = 0x503C
+U_EE_WriteBlock = 0x5099
+U_debounce = 0x5051
+U_deb10 = 0x504B
+U_deb30 = 0x504E
+U_delMsgs = 0x5057
+U_readAD = 0x506C
+U_map = 0x5069
+U_GetAccess = 0x5096
+U_SetPollingRsp = 0x50AE
+U_ioAST = 0x5066
+S_AstShift = 0x5042
+S_LastShift = 0x5045
+U_SerialShift = 0x5048
+TM_Load = 0x5039
+TM_GetFlg = 0x5036
+U_SetTM = 0x506F
+U_SetTMx = 0x5072
+U_GetTM =  0x5060
+U_GetTMx = 0x5063
+U_Delay = 0x5054
+U_TS_Set = 0x5090
+U_TS_Del = 0x5093
+U_TS_Seti = 0x50AB
+AllocBuf = 0x5000
+FreeBuf = 0x5006
+PopBuf = 0x5003
+U_MS_Post = 0x508D
+U_MS_Switch = 0x508A
+multDE_FG = 0x5033
+divDE_BC = 0x5030
+FP_Flt2Int = 0x5087
+FP_Int2Flt = 0x5084
+shlA4 = 0x5018
+shlA5 = 0x501B
+shlA6 = 0x501E
+shlA7 = 0x5021
+shrA4 = 0x5024
+shrA5 = 0x5027
+shrA6 = 0x502A
+shrA7 = 0x502D
+rolA1 = 0x5009
+rolA2 = 0x500C
+rolA3 = 0x500F
+rolA4 = 0x5012
+rolA7 = 0x5015
+U_SetBit = 0x5078
+U_GetBit = 0x5075
+U_FT12_Reset = 0x509C
+U_FT12_GetStatus = 0x509F
+U_SCI_Init = 0x50A2
+U_SPI_Init = 0x50A5
+
+[BCU10113.API]
+U_flagsGet = 0x3D14
+U_flagsSet = 0x3D11
+U_testObj =  0x3D17
+U_transRequest = 0x3D0E
+EEwrite = 0x3D08
+EEsetChecksum = 0x3D05
+U_debounce = 0x3D26
+U_deb10 = 0x3D23
+U_deb30 = 0x3D20
+U_delMsgs = 0x3D89
+U_readAD = 0x3D38
+U_map = 0x3D86
+U_ioAST = 0x3D35
+S_AstShift = 0x3D3E
+S_LastShift = 0x3D3B
+U_SerialShift = 0x3D41
+TM_Load = 0x3D1A
+TM_GetFlg = 0x3D1D
+U_SetTM = 0x3D32
+U_SetTMx = 0x3D2F
+U_GetTM = 0x3D2C
+U_GetTMx = 0x3D29
+U_Delay = 0x3D02
+AllocBuf = 0x3D8F
+FreeBuf = 0x3D8C
+PopBuf = 0x3D92
+multDE_FG = 0x3D80
+divDE_BC = 0x3D83
+shlA4 = 0x3D59
+shlA5 = 0x3D5C
+shlA6 = 0x3D5F
+shlA7 = 0x3D62
+shrA4 = 0x3D4D
+shrA5 = 0x3D50
+shrA6 = 0x3D53
+shrA7 = 0x3D56
+rolA1 = 0x3D77
+rolA2 = 0x3D74
+rolA3 = 0x3D71
+rolA4 = 0x3D6E
+rolA7 = 0x3D6B
+U_SetBit = 0x3D47
+U_GetBit = 0x3D44
+
+[BCU701.API]
+AL_isSapLinked = 0xFFA7
+_check = 0xFFC8
+_copyMem = 0xFFBF
+_getAPIVersion = 0xFFD1
+_installCallback = 0xFFC5
+_modulMode = 0xFFC2
+_MSG_allocBuffer = 0xFFB0
+_MSG_freeMessage = 0xFFB9
+_MSG_getMessage =  0xFFB6
+_MSG_postMessage = 0xFFB3
+_MSG_staticRedirection = 0xFFBC
+_PEI_addEvent = 0xFF98
+_PEI_analogueIn = 0xFF8F
+_PEI_binaryInOut = 0xFF8C
+_PEI_getActualPeiType = 0xFFA4
+_PEI_getEvent = 0xFF9B
+_PEI_getFreeBufferSpace = 0xFF7D
+_PEI_init = 0xFFA1
+_PEI_initBuffer = 0xFF7A
+_PEI_initEventQueue = 0xFF95
+_PEI_rcvBufferRead = 0xFF80
+_PEI_rcvBufferWrite = 0xFF83
+_PEI_sendBufferRead = 0xFF86
+_PEI_sendBufferWrite = 0xFF86
+_PEI_sendByteSerial = 0xFF92
+_PEI_setTimer = 0xFF9E
+_runRomModule = 0xFFCB
+_setParam = 0xFF77
+_taskSwitch = 0xFFCE
+_TM_getSystemTime = 0xFFAA
+_TM_getUserTicks = 0xFFAD
+
+[BCU10.MemoryMap]
+
+[BCU11.MemoryMap]
+
+[BCU12.MemoryMap]
+
+[BCU20.MemoryMap]
+
