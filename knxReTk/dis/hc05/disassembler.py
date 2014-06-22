@@ -214,19 +214,20 @@ class Disassembler(object):
         print sorted([hex(x) for x in self.jumpTargets])
 
     def disassemble(self):
-        lines = []
+        lines = set()
         while self.callTargets:
             target = self.callTargets.pop()
             result = self.disassembleTillReturn(target)
-            #print len(result)
-            lines.extend(result)
-            #print len(lines)
-        return sorted(set(lines), key = lambda o: o.address)
-
+            #lines.extend(result)
+            lines = lines.union(result)
+        #return sorted(set(lines), key = lambda o: o.address)
+        return sorted(dict((e.address, e) for e in lines).itervalues(), key = lambda o: o.address)
 
     def disassembleTillReturn(self, address):
-        lines = []
+        lines = set()
         origAddress = address
+        if address == 0xaf4:
+            print ""
         while True:
             try:
                 line = self.disassembleLine(address)
@@ -237,17 +238,16 @@ class Disassembler(object):
                     print "Illegal Opcode while disassembling line: %s" % e
                     break
             address += line.size
-            if not self.memoryExplorer.isExplored(address):
-                lines.append(line)
+            #if not self.memoryExplorer.isExplored(origAddress): # and line not in lines:
+            if origAddress not in self.processed:
+                lines.add(line) #lines.append(line)
             if line.opcode in RETURNS:
                 break
         self.processed.add(origAddress)
-        #print "-" * 80
         while self.jumpTargets:
             target = self.jumpTargets.pop()
             if not self.memoryExplorer.isExplored(target):
-                lines.extend(self.disassembleTillReturn(target))
-        #print len(lines)
+                lines = lines.union(self.disassembleTillReturn(target))#lines.extend(self.disassembleTillReturn(target))
         return lines
 
     def disassembleLine(self, address):
