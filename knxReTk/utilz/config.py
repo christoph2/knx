@@ -29,6 +29,7 @@ __version__ = '0.1.0'
 
 import os
 import pkgutil
+import zlib
 
 from knxReTk.utilz.logger import logger, verboseLevel
 
@@ -59,4 +60,7 @@ def absConfigurationFilename(fname):
 
 def readConfigData(project, fname):
     return pkgutil.get_data(project, 'config/%s' % fname)
+
+def masterXML():
+    return zlib.decompress(readConfigData('knxReTk', 'knx_master.Z'))
 
