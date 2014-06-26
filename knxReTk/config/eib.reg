@@ -58,17 +58,26 @@ SWI_VECTOR      = 0x1FFC
 RESET_VECTOR    = 0x1FFE
 
 [HC05BE12.MemoryMap]
-IORegs  = 0x0000, 0x001F, RW
-ZROM    = 0x0020, 0x004F, R
-ZRAM    = 0x0050, 0x00FF, RW
-EEPROM  = 0x0100, 0x046F, RX
-SysEEP  = 0x0470, 0x04DF, R
-protEEP = 0x04E0, 0x04FF, R
-hiRAM   = 0x0900, 0x09CF, RW
-sysROM  = 0x5000, 0x7E7F, RX
-bootROM = 0x7E80, 0x7FDF, RX
-bootVectors = 0x7FE0, 0x7FEF, R
-sysVectors  = 0x7FF0, 0x7FFF, R
+IOSpace1                        = 0x0000, 0x001F, RW
+Page0UserROM1                   = 0x0020, 0x002F, R
+IOSpace2                        = 0x0030, 0x003F, RW
+Page0UserROM2                   = 0x0040, 0x004F, R
+ZRAM                            = 0x0050, 0x00FF, RW
+EEPROMUnprotected               = 0x0100, 0x02FF, RX
+EEPROMProtected                 = 0x0300, 0x04DF, RX
+EEPROMSinglechipProtected       = 0x04E0, 0x04FF, RX
+Reserved1                       = 0x0500, 0x08FF, R
+hiRAM                           = 0x0900, 0x09CF, RW
+Reserved2                       = 0x09D0, 0x0FCF, R
+PortCMux                        = 0x0FD0, 0x0FD1, RW
+Reserved3                       = 0x0FD2, 0x0FDF, R
+BitEngineInterfaceRegister      = 0x0FE0, 0x0FFF, RW
+BitEngineROM                    = 0x1000, 0x17FF, R
+Reserved4                       = 0x1800, 0x4FFF, R
+userROM                         = 0x5000, 0x7E7F, RX
+bootLoaderROM                   = 0x7E80, 0x7FDF, RX
+bootLoaderVectors               = 0x7FE0, 0x7FEF, R
+sysVectors                      = 0x7FF0, 0x7FFF, R
 
 [HC05BE12.Vectors]
 BL_TIMER16_VECTOR               = 0x7FE0
