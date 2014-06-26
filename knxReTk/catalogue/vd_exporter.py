@@ -292,12 +292,19 @@ class CatalogueReverser(object): # TODO: Strategy
         columnBuilder = ColumnBuilder()
         rowBuilder = RowBuilder()
         self.outf.write("%s\n" % XML_DECL)
-        originalFilename = self.header.originalFilename
+        if hasattr(self.header, 'originalFilename'):
+            originalFilename = self.header.originalFilename
+        else:
+            originalFilename = ''
         if hasattr(self.header, 'creator'):
             creator = self.header.creator
         else:
             creator = "<Unknown>"
-        date = 'T'.join(self.header.date.split())
+
+        if hasattr(self.header, 'date'):
+            date = 'T'.join(self.header.date.split())
+        else:
+            date = ''
         version = self.header.version
         rootTable = self.header.rootTable
         self.outf.write('<CATALOGUE originalFilename="%s" creator="%s" date="%s" version="%s" rootTable="%s" >\n' % (
@@ -398,6 +405,7 @@ def run(fileName, password):
     print "\n", "=" * 80
 
 
+#sys.argv.append(r'C:\projekte\csProjects\knxReTk\tests\N567_22_981C02.vd5')
 
 def main():
     print """
@@ -411,7 +419,6 @@ vd_exporter: export / convert ETS 'vd?' and 'pr?' files to XML.
         if len(glob.glob(sys.argv[1])) == 0:
             print "filespec does not match."
             sys.exit(1)
-        password = sys.argv[1]
         for filename in glob.glob(sys.argv[1]):
             run(filename, 'Orleander')
 
