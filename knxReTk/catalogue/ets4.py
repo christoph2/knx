@@ -28,6 +28,7 @@ __author__  = 'Christoph Schueler'
 __version__ = '0.1.0'
 
 import re
+import zlib
 
 ESCAPE = re.compile(r'\.[0-9A-F]{2}')
 
@@ -43,12 +44,12 @@ def escape(value):
                 result.append(ch)
         return ''.join(result)
 
-
-
-def escaper(match):
+def unescaper(match):
     return chr(int(match.group()[1:], 16))
 
 def unescape(value):
-    return ESCAPE.sub(escaper, value)
+    return ESCAPE.sub(unescaper, value)
 
+def masterXML():
+    return zlib.decompress(readConfigData('knxReTk', 'knx_master.Z'))
 
