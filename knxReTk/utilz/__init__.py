@@ -27,3 +27,11 @@ __copyright__ = """
 __author__  = 'Christoph Schueler'
 __version__ = '0.1.0'
 
+import itertools
+
+def slicer(iterable, sliceLength, converter = None):
+    if converter is None:
+        converter = type(iterable)
+    length = len(iterable)
+    return [converter(*(iterable[item : item + sliceLength])) for item in range(0, length, sliceLength)]
+
