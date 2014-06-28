@@ -68,7 +68,7 @@ class Symbols(object):
                     value = int(match.group('value'), 16)
                     arraySize = match.group('arraySize')
                     if arraySize:
-                        self.sections[currentSection].append(ArrayProperty(prop, value, arraySize, ))
+                        self.sections[currentSection].append(ArrayProperty(prop, value, int(arraySize), ))
                     else:
                         self.sections[currentSection].append(ValueProperty(prop, value, ))
                 else:
@@ -90,7 +90,7 @@ class Symbols(object):
                     self.memoryMap = section
                 else:
                     #print name #, section
-                    self._items.update(dict([(item.value, item.name) for item in section]))
+                    self._items.update(dict([(item.value, item) for item in section]))
     @property
     def interruptVectors(self):
         return self.sections[(self.mcu, 'Vectors')]
