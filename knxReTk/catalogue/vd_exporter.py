@@ -231,6 +231,8 @@ class CatalogueReverser(object): # TODO: Strategy
         _, relpath = os.path.splitdrive(path)
         fname, _ = os.path.splitext(relpath)
         self.outf = codecs.open('%s.xml' % fname, mode = 'w', encoding = "utf-8")
+        self.logFile = codecs.open('%s.log' % fname, mode = 'w', encoding = "utf-8")
+        #self.logFile = sys.stdout
         print 'TARGET FILE: %s.xml' % fname
 
     def _getLine(self):
@@ -246,6 +248,9 @@ class CatalogueReverser(object): # TODO: Strategy
         line = self.line
         finished = False
         while line != SEPARATOR:
+            match = SEPARATOR2.match(line)
+            if match:
+                print line
             result.append(line)
             try:
                 line = self.line
@@ -259,9 +264,11 @@ class CatalogueReverser(object): # TODO: Strategy
     block = property(_getBlock)
 
     def parse(self):
+        self.pos = 0
         self.parseFileHeader()
         self.parseTables()
         self.outf.close()
+        self.logFile.close()
 
     def checkSignature(self):
         if self.data[0] != MAGIC_SIG:
@@ -283,6 +290,7 @@ class CatalogueReverser(object): # TODO: Strategy
             setattr(header, ATTRIBUTE_MAP[tag], content)
         setattr(self, 'header', header)
         print "HEADER: \n%s\n\n" % header
+        self.logFile.write("%s\n\n" % header)
 
     def parseTables(self):
         idx = 0
@@ -342,6 +350,12 @@ class CatalogueReverser(object): # TODO: Strategy
                             columnIdx = 1
                             self.outf.write("        <%s>\n" % tb.name.upper())
                             self.state = STATE_ROW
+                            self.logFile.write("%s[%u]\n" % (tb.name, tb.number))
+                            print("%s[%u]\n" % (tb.name, tb.number))
+                            for column in tb.columns:
+                                self.logFile.write("    %s[%u]::%s %s\n" % (column.name, column.colNumber, column.type_, column.nulls))
+                                print("    %s[%u]::%s %s\n" % (column.name, column.colNumber, column.type_, column.nulls))
+                            self.logFile.write("\n")
                 elif self.state == STATE_ROW:
                     columnBuilder.add(line)
                     if lineNumber <= len(block) - 1:
@@ -406,6 +420,7 @@ def run(fileName, password):
 
 
 #sys.argv.append(r'C:\projekte\csProjects\knxReTk\tests\N567_22_981C02.vd5')
+#sys.argv.append(r'C:\projekte\csProjects\knxReTk\tests\n342.vd2')
 
 def main():
     print """
