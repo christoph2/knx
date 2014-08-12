@@ -35,6 +35,7 @@ class MemoryExplorer(object):
     def __init__(self, size, offset = 0x0000):
         self.memory = [0] * (size >> 3)
         self.offset = offset
+        self.size = size
 
     def _getBit(self, by, bit):
         return (by & (1 << bit)) >> bit
