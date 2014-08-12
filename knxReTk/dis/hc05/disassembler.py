@@ -31,12 +31,13 @@ import os
 from pprint import pprint
 import sys
 
+from knxReTk.utilz import slicer
 from knxReTk.utilz.logger import logger
 from knxReTk.executionModel.memory import ReadWriteMemory
 from knxReTk.dis.explorer import MemoryExplorer
 from knxReTk.dis.hc05.opcode_map import OPCODES, ILLEGAL_OPCODES, CALLS, JUMPS, RETURNS
 import knxReTk.dis.hc05.opcode_map as opcode_map
-from knxReTk.config.symbols import Symbols
+from knxReTk.config.symbols import Symbols, ValueProperty, ArrayProperty
 from knxReTk.utilz.config import readConfigData
 
 class Entry(object):
@@ -108,8 +109,15 @@ class Operation(Entry):
 
     def __str__(self):
         displayString, _ = self.processes()
+        if self.label:
+            label = self.label
+            if isinstance(label, ValueProperty):
+                label  = label.name
+            label = "%s:" % label
+        else:
+            label = self.label
         return "$%04x %02x %s    %-20s %s %s" % (
-            self.address, self.opcode, self.formatOperandData(), self.label, self.opcodeName, displayString
+            self.address, self.opcode, self.formatOperandData(), label, self.opcodeName, displayString
         )
 
     __repr__ = __str__
@@ -183,13 +191,13 @@ class Operation(Entry):
 
     def getLocationExt(self, addr):
         if addr in Operation.symbols:
-            return Operation.symbols[addr]
+            return Operation.symbols[addr].name
         else:
             return "$%04x" % addr
 
     def getLocationDir(self, addr):
         if addr in Operation.symbols:
-            return Operation.symbols[addr]
+            return Operation.symbols[addr].name
         else:
             return "$%02x" % addr
 
@@ -211,7 +219,7 @@ class Disassembler(object):
         self.jumpTargets = set()
         self.processed = set()
         #print "Call-Targets: ", [hex(x) for x in self.callTargets]
-        print sorted([hex(x) for x in self.jumpTargets])
+        #print sorted([hex(x) for x in self.jumpTargets])
 
     def disassemble(self):
         lines = set()
@@ -221,7 +229,7 @@ class Disassembler(object):
             #lines.extend(result)
             lines = lines.union(result)
         #return sorted(set(lines), key = lambda o: o.address)
-        return sorted(dict((e.address, e) for e in lines).itervalues(), key = lambda o: o.address)
+        return dict((e.address, e) for e in lines)
 
     def disassembleTillReturn(self, address):
         lines = set()
@@ -297,16 +305,18 @@ class Disassembler(object):
         return operation
 
 
+from csstuff.profilehooks import profile
+
 def main():
     #print os.getcwd()
 
-    #mcu = 'HC05BE12'
-    #mask = 'BCU20'
-    #fileName = r".\knxReTk\imagez\bcu20.bin"
+    mcu = 'HC05BE12'
+    mask = 'BCU20'
+    fileName = r".\knxReTk\imagez\bcu20.bin"
 
-    mcu = 'HC05B6'
-    mask = 'BCU12'
-    fileName = r".\knxReTk\imagez\bcu12.bin"
+    #mcu = 'HC05B6'
+    #mask = 'BCU12'
+    #fileName = r".\knxReTk\imagez\bcu12.bin"
 
     sys.argv.extend([fileName, mcu, mask])
 
@@ -315,22 +325,88 @@ def main():
     if len(sys.argv) < 3:
         print "usage: eib_disassemble: file mcu mask"
 
-    if os.access('user.reg', os.F_OK):
+    if os.access('user.reg', os.F_OK):  # TODO: Nach symbols!!!
         userSymbols = Symbols(open('user.reg').read(), mcu, mask)
         for name, value in userSymbols.sections[(mask, 'labels')]:
-            symbols._items[value] = name
+            symbols._items[value] = ValueProperty(name, value)
 
     interruptVectors = [v.value for v in symbols.interruptVectors]
     additionalEntries = [s.value for s in symbols.sections[(mask, 'API', )]]
 
     disassembler = Disassembler(OPCODES, fileName, symbols, interruptVectors, additionalEntries)
     operations = disassembler.disassemble()
+
     print "=" * 80
-    for line in sorted(operations, key = lambda o: o.address):
-        print line
-    print "=" * 80
+##
+##    for section in symbols.memoryMap:
+##        start = section.start
+##        end = section.end
+##        length = end - start
+##        r = section.r
+##        w = section.w
+##        x = section.x
+##        print "    org $%04x\n" % start
+##        for address in range(start, end + 1):
+##            if address in symbols:
+##                sym = symbols[address]
+##                if isinstance(sym, ArrayProperty):
+##                    slices = slicer(disassembler.memory.getBlob(address, sym.size), 32, tuple)
+##                    print "%-18s fcb    %s" % (sym.name, ', '.join(["$%02x" % s for s in slices[0]]))
+##                    if len(slices) > 1:
+##                        for slice in slices[ 1 : ]:
+##                            print "%s fcb    %s" % (" " * 18, ', '.join(["$%02x" % s for s in slice]))
+##                elif isinstance(sym, ValueProperty):
+##                    print "%-18s fcb    $%02x" % (sym.name, disassembler.getByte(address))
+##        print
+##
+
+    me = disassembler.memoryExplorer
+    memoryMap = symbols.memoryMap
+    transformedMM = {m.start:m  for m in memoryMap}
+    data = []
+    code = []
+    address = 0
+    currentSegment = None
+    while address < range(me.size):
+        if address in transformedMM:
+            currentSegment = transformedMM[address]
+            print "    org $%04x        [%s] \n" % (currentSegment.start, currentSegment)
+        if not me.isExplored(address):
+            data.append(address)
+            if code:
+                #print "C:", code
+                for addr in code:
+                    if addr in symbols:
+                        pass
+                    if addr in operations:
+                        print operations[addr]  #disassembler.disassembleLine(addr)
+                    else:
+                        print "%-18s fcb $%02x" % (" " * 18, disassembler.getByte(address))
+                code = []
+            address += 1
+        else:
+            code.append(address)
+            if data:
+                #print "D:", data
+                for slice in slicer(disassembler.memory.getBlob(data[0], len(data)), 16, tuple):
+                    print "%s fcb    %s" % (" " * 18, ', '.join(["$%02x" % s for s in slice]))
+                data = []
+            if address in operations:
+                address += operations[address].size
+            else:
+                address += 1
+
+##
+##    print "=" * 80
+##    for _, line in sorted(operations.iteritems(), key = lambda o: o[1].address):
+##        print line
+##    print "=" * 80
+##
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as e:
+        print str(e)
 

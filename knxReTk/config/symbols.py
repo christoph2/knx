@@ -68,7 +68,9 @@ class Symbols(object):
                     value = int(match.group('value'), 16)
                     arraySize = match.group('arraySize')
                     if arraySize:
-                        self.sections[currentSection].append(ArrayProperty(prop, value, int(arraySize), ))
+                        #self.sections[currentSection].append(ArrayProperty(prop, value, int(arraySize), ))
+                        for offset in range(int(arraySize)):
+                            self.sections[currentSection].append(ValueProperty("%s + %u" % (prop, offset), value + offset, ))
                     else:
                         self.sections[currentSection].append(ValueProperty(prop, value, ))
                 else:
