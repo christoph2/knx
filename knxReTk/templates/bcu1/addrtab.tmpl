@@ -1,0 +1,8 @@
+*
+*   Address-Table
+*
+NumAddresses:   fcb     ${aw.eebyte(0x116)}     * Number of group-addresses from DB: ${((int(app.address_tab_size) - 3) / 2)}
+PhysAddr:       fcb     ${aw.eebyte(0x117)}, ${aw.eebyte(0x118)}
+%for idx in range((int(app.address_tab_size) - 3) / 2):
+                fcb     ${aw.eebyte(0x119 + (idx * 2))}, ${aw.eebyte(0x119 + ((idx * 2) + 1))}
+%endfor

@@ -1,0 +1,31 @@
+*
+* Program:               ${app.program_name} [${app.program_id}]
+* Manufacturer:          ${manufacturers[app.manufacturer_id].manufacturer_name}
+* Original Manufacturer: ${manufacturers[app.original_manufacturer_id].manufacturer_name}
+* Mask:                  ${masks[app.mask_id].mask_version_name}
+*
+%if hasattr(app, 'bcu_type_number') :
+* Bcu:                   ${app.bcu_type_number}
+%endif
+*
+*
+
+OptionReg:              fcb     ${aw.eebyte(0x100)}
+ManData:                fcb     ${aw.eebyte(0x101)}, ${aw.eebyte(0x102)}
+Manufact:               fcb     ${aw.eebyte(0x103)}, ${aw.eebyte(0x104)}
+DevTyp:                 fcb     ${aw.eebyte(0x105)}, ${aw.eebyte(0x106)}
+Version:                fcb     ${aw.eebyte(0x107)}
+CheckLim:               fcb     ${aw.eebyte(0x108)}
+PEI_Type_expected:      fcb     ${aw.eebyte(0x109)}
+SyncRate:               fcb     ${aw.eebyte(0x10a)}
+PortCDDR:               fcb     ${aw.eebyte(0x10b)}
+PortADDR:               fcb     ${aw.eebyte(0x10c)}
+RunError:               fcb     ${aw.eebyte(0x10d)}
+RouteCnt:               fcb     ${aw.eebyte(0x10e)}
+MxRstCnt:               fcb     ${aw.eebyte(0x10f)}
+ConfigDes:              fcb     ${aw.eebyte(0x110)}
+AssocTabPtr:            fcb     ${aw.eebyte(0x111)}
+CommsTabPtr:            fcb     ${aw.eebyte(0x112)}
+UsrInitPtr:             fcb     ${aw.eebyte(0x113)}
+UsrPrgPtr:              fcb     ${aw.eebyte(0x114)}
+UsrSavPtr:              fcb     ${aw.eebyte(0x115)}

@@ -24,6 +24,7 @@ setup(
     data_files = [
             ('knxReTk/config', glob('knxReTk/config/*.*')),
             ('knxReTk/imagez', glob('knxReTk/imagez/*.bin')),
+            ('knxReTk/templates/bcu1', glob('knxReTk/templates/bcu1/*.tmpl')),
     ],
 )
 

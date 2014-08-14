@@ -1,0 +1,8 @@
+*
+*   Association-Table
+*
+
+NumAssocs:      fcb     ${aw.eebyte(int(app.assoctab_address))}     *  From DB: ${(int(app.assoctab_size) - 1) / 2}
+%for idx in range((int(app.assoctab_size) - 1) / 2):
+                fcb     ${aw.eebyte((int(app.assoctab_address) + 1) + (idx * 2))}, ${aw.eebyte((int(app.assoctab_address) + 1) + ((idx * 2) + 1))}
+%endfor
