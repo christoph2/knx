@@ -48,15 +48,6 @@ def projectConfigurationDirectory(project):
         print
     return path
 
-print projectConfigurationDirectory('knxReTk')
-
-"""
-
-def absConfigurationFilename(fname):
-    return os.path.join(CONFIGURATION_DIRECTORY, fname)
-
-"""
-
 def readConfigData(project, fname):
     return pkgutil.get_data(project, 'config/%s' % fname)
 
