@@ -68,7 +68,7 @@ def getZipFileContents(fname, password):
         zf.printdir()
         for fl in zf.filelist:
             inf = zf.open(fl, 'r', password)
-            completePath = os.path.join(targetDirectoty, fl.filename)  # subDirectory
+            completePath = os.path.join(targetDirectoty, fl.filename)
             basedir, filename = os.path.split(completePath)
             if not os.access(basedir, os.F_OK):
                 os.makedirs(basedir)
@@ -87,25 +87,26 @@ CONTINUATION    = r"\\"
 MAGIC_SIG       = "EX-IM"
 EOF_SIG         = "XXX"
 
-TABLE           = re.compile(r'''
+TABLE = re.compile(r'''
     ^T\s+(?P<tableNumber>\d{,3})\s+
     (?P<name>[a-zA-Z][A-Za-z_0-9]+)$
-''', re.VERBOSE)
+''', re.VERBOSE | re.I)
 
-COL_DESC        = re.compile(r'''
+COL_DESC = re.compile(r'''
     ^C(?P<colNumber>\d{,3})\s+
     T(?P<tableNumber>\d{,3})\s+
     (?P<type>\d{,2})\s+
     (?P<length>\d{,9})\s+
     (?P<nulls>Y | N)\s+
-    (?P<name>[a-zA-Z][a-zA-Z_0-9]+)$
-''', re.VERBOSE)
+    (?P<name>\S+)$
+    #(?P<name>[a-zA-Z][a-zA-Z_0-9]+)$
+''', re.VERBOSE | re.I)
 
-ROW             = re.compile(r'''
+ROW = re.compile(r'''
     ^R\s+(?P<rowNumber>\d{,9})\s+
     T\s+(?P<tableNumber>\d{,3})\s+
-    (?P<name>[a-z][a-z_]+)$
-''', re.VERBOSE)
+    (?P<name>\S+)$
+''', re.VERBOSE | re.I)
 
 
 TYPE_MAP = {
@@ -331,14 +332,14 @@ class CatalogueReverser(object):
             idx += 1
             block, finished = self.block
             self.state = STATE_TABLE
-            self.parseTableHeader()
+            #self.parseTableHeader()
             for lineNumber, line in enumerate(block, 1):
                 if self.state == STATE_TABLE:
                     ma = TABLE.match(line)
                     if ma:
                         TableNamesToNumbers[ma.group("name")].add(ma.group("tableNumber"))
-
                         tb = TableBuilder(ma.group("name"), ma.group("tableNumber"))
+
                         self.state = STATE_COLUMN
                     else:
                         raise FormatError("Expected table declaration [%u]: '%s'." % (lineNumber, line))
@@ -393,8 +394,8 @@ class CatalogueReverser(object):
 
         self.onFinished()
 
-    def parseTableHeader(self):
-        pass
+    #def parseTableHeader(self):
+    #    pass
 
     def parserTableData(self):
         tableNumber = int(ma.groupdict('tableNumber'))
