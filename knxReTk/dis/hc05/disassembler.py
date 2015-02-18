@@ -205,6 +205,8 @@ class Operation(Entry):
 class IllegalOpcode(Exception): pass
 
 
+from csstuff.profilehooks import profile
+
 class Disassembler(object):
     def __init__(self, opcodes, imageFileName, symbols, indirectAddresses, directAddresses = ()):
         self.opcodes = opcodes
@@ -305,8 +307,75 @@ class Disassembler(object):
         return operation
 
 
-from csstuff.profilehooks import profile
+class ImageDisassembler(object):
+    """Disassemble KNX/EIB BCU ROM images.
+    """
 
+    def __init__(self, fileName, mcu, mask):
+        self.fileName = fileName
+        self.mcu = mcu
+        self.mask = mask
+
+        self.symbols = Symbols(readConfigData('knxReTk', 'eib.reg'), self.mcu, self.mask)
+
+        if os.access('user.reg', os.F_OK):  # TODO: symbols!!!
+            userSymbols = Symbols(open('user.reg').read(), mcu, mask)
+            for name, value in userSymbols.sections[(mask, 'labels')]:
+                self.symbols._items[value] = ValueProperty(name, value)
+
+        interruptVectors = [v.value for v in self.symbols.interruptVectors]
+        additionalEntries = [s.value for s in self.symbols.sections[(mask, 'API', )]]
+
+        self.disassembler = Disassembler(OPCODES, self.fileName, self.symbols, interruptVectors, additionalEntries)
+
+
+    def run(self):
+
+        operations = self.disassembler.disassemble()
+
+        print "=" * 80
+
+        me = self.disassembler.memoryExplorer
+        memoryMap = self.symbols.memoryMap
+        transformedMM = {m.start:m  for m in memoryMap}
+        data = []
+        code = []
+        address = 0
+        currentSegment = None
+        while address < range(me.size):
+            if address in transformedMM:
+                #if data:
+                #    print data
+                currentSegment = transformedMM[address]
+                print "    org $%04x        ; Segment-Length: %u Bytes \n" % (currentSegment.start,
+                    currentSegment.end - currentSegment.start + 1
+                )
+            if not me.isExplored(address):
+                data.append(address)
+                if code:
+                    #print "C:", code
+                    for addr in code:
+                        if addr in self.symbols:
+                            pass
+                        if addr in operations:
+                            print operations[addr]  #disassembler.disassembleLine(addr)
+                        else:
+                            print "%-18s fcb $%02x" % (" " * 18, self.disassembler.getByte(address))
+                    code = []
+                address += 1
+            else:
+                code.append(address)
+                if data:
+                    for slice in slicer(self.disassembler.memory.getBlob(data[0], len(data)), 16, tuple):
+                        print "%s fcb    %s" % (" " * 18, ', '.join(["$%02x" % s for s in slice]))
+                    data = []
+                if address in operations:
+                    address += operations[address].size
+                else:
+                    address += 1
+
+
+#@profile
 def main():
     #print os.getcwd()
 
@@ -320,81 +389,15 @@ def main():
 
     sys.argv.extend([fileName, mcu, mask])
 
-    symbols = Symbols(readConfigData('knxReTk', 'eib.reg'), mcu, mask)
-
     if len(sys.argv) < 3:
         print "usage: eib_disassemble: file mcu mask"
 
-    if os.access('user.reg', os.F_OK):  # TODO: Nach symbols!!!
-        userSymbols = Symbols(open('user.reg').read(), mcu, mask)
-        for name, value in userSymbols.sections[(mask, 'labels')]:
-            symbols._items[value] = ValueProperty(name, value)
+    imgDis = ImageDisassembler(fileName, mcu, mask)
+    try:
+        imgDis.run()
+    except Exception as e:
+        print str(e)
 
-    interruptVectors = [v.value for v in symbols.interruptVectors]
-    additionalEntries = [s.value for s in symbols.sections[(mask, 'API', )]]
-
-    disassembler = Disassembler(OPCODES, fileName, symbols, interruptVectors, additionalEntries)
-    operations = disassembler.disassemble()
-
-    print "=" * 80
-##
-##    for section in symbols.memoryMap:
-##        start = section.start
-##        end = section.end
-##        length = end - start
-##        r = section.r
-##        w = section.w
-##        x = section.x
-##        print "    org $%04x\n" % start
-##        for address in range(start, end + 1):
-##            if address in symbols:
-##                sym = symbols[address]
-##                if isinstance(sym, ArrayProperty):
-##                    slices = slicer(disassembler.memory.getBlob(address, sym.size), 32, tuple)
-##                    print "%-18s fcb    %s" % (sym.name, ', '.join(["$%02x" % s for s in slices[0]]))
-##                    if len(slices) > 1:
-##                        for slice in slices[ 1 : ]:
-##                            print "%s fcb    %s" % (" " * 18, ', '.join(["$%02x" % s for s in slice]))
-##                elif isinstance(sym, ValueProperty):
-##                    print "%-18s fcb    $%02x" % (sym.name, disassembler.getByte(address))
-##        print
-##
-
-    me = disassembler.memoryExplorer
-    memoryMap = symbols.memoryMap
-    transformedMM = {m.start:m  for m in memoryMap}
-    data = []
-    code = []
-    address = 0
-    currentSegment = None
-    while address < range(me.size):
-        if address in transformedMM:
-            currentSegment = transformedMM[address]
-            print "    org $%04x        [%s] \n" % (currentSegment.start, currentSegment)
-        if not me.isExplored(address):
-            data.append(address)
-            if code:
-                #print "C:", code
-                for addr in code:
-                    if addr in symbols:
-                        pass
-                    if addr in operations:
-                        print operations[addr]  #disassembler.disassembleLine(addr)
-                    else:
-                        print "%-18s fcb $%02x" % (" " * 18, disassembler.getByte(address))
-                code = []
-            address += 1
-        else:
-            code.append(address)
-            if data:
-                #print "D:", data
-                for slice in slicer(disassembler.memory.getBlob(data[0], len(data)), 16, tuple):
-                    print "%s fcb    %s" % (" " * 18, ', '.join(["$%02x" % s for s in slice]))
-                data = []
-            if address in operations:
-                address += operations[address].size
-            else:
-                address += 1
 
 ##
 ##    print "=" * 80
@@ -403,10 +406,52 @@ def main():
 ##    print "=" * 80
 ##
 
+from objutils.SRecords import Reader
+from objutils.Segment import joinSegments
+from cStringIO import StringIO
+
+import pkgutil
+
+def getTemplate(template):
+    pkgutil.get_data('knxReTk', 'templates/bcu1/%s.tmpl' % template)
+
+ttt = getTemplate('header')
+print ttt
+
+S19 = """S1130100FF00000001740401DF08000000FFE06349
+S1130110E82F46B169B105FFFF10021009100B105A
+S11301200CFFFFFFFFFFFFFFFFFFFFFFFFFFFF0BC2
+S11301300100010101020103010401050106010797
+S113014003080409020A0BCED4C707D4C707D4C7CF
+S113015007D4C707D4C707D4C707D4C707D4C7076A
+S1130160D5D700D5D700D6D708B602A43C2642B6C8
+S1130170D8CD0C9D02503AB6D6A4E0A100263B0788
+S1130180D338B6D6AAE097A407B7D9B6D400D722F5
+S113019003D70B4F05D7014AAD3610D720E40AD751
+S11301A0061AD7E6FFB7D404D70427054A4A4C26D3
+S11301B01F815ACD0C383FD93FD23FD3A6E006D297
+S11301C0050FD2EDAB1001D502AB08BBD997E6FF02
+S11301D0B7D4B6D93CD9A10824DCB7D8CC0DB9FF23
+S11301E0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF1B
+S11301F0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000A
+S5030010EC
+"""
+
+rd = Reader(StringIO(S19))
+data = rd.read()
+
+
+class ROMDisassembler(object):
+
+    def __init__(self, image):
+        self.memory = ReadWriteMemory(StringIO(image))
+        self.getByte = self.memory.createGetter(1, self.memory.BIG_ENDIAN)
+        self.getWord = self.memory.createGetter(2, self.memory.BIG_ENDIAN)
+
+
+rd = ROMDisassembler(data.segments[0].data)
+print rd
 
 if __name__ == '__main__':
-    try:
-        main()
-    except Exception as e:
-        print str(e)
+    main()
 

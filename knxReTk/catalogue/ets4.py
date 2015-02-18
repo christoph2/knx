@@ -33,6 +33,18 @@ import zlib
 ESCAPE = re.compile(r'\.[0-9A-F]{2}')
 
 def escape(value):
+    """This section summarizes the naming rules for elements of the KNX XML schema. All these IDs are constructed
+    so that they are globally unique. Detailed descriptions are included in the individual element descriptions.
+    Note that many IDs of subordinate elements start with the ID of the parent element, then – separated by an
+    underscore – additional specification. Often part of the constructed ID is a unique number. How this number
+    is to be generated and which unique constraints apply for the given element is described in detail in the
+    individual element descriptions. Because IDs can contain only letters, digits, dot, hyphen and underscore
+    characters (see XML Namespaces specification, production for NCName), and hyphen and underscore are already
+    used as separators, all characters from strings that are not letters or digits have to be escaped: A
+    character which is neither a letter nor a digit is represented as a dot, followed by 2 hexadecimal digits
+    representing the UTF-8 encoding of the character. Example: a slash (/) is represented as ".2F", a German
+    umlaut ä (Unicode code point U+00E4) as ".C3.A4".
+    """
     if value.isalnum():
         return value
     else:
