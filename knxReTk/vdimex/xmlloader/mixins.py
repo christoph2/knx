@@ -28,7 +28,11 @@ __author__  = 'Christoph Schueler'
 __version__ = '0.1.0'
 
 
+from copy import copy
+
 class BaseMixin(object):
+
+    result = []
 
     def convertAttributes(self, attrs):
         for k, v in attrs.items():
@@ -48,8 +52,6 @@ class HardwareMixin(BaseMixin):
     """Process 'hardware.xml' files.
     """
 
-    hardwareList = []
-
     def onHardwareStart(self, name, attrs):
         if attrs:
             attrs = self.convertAttributes(attrs)
@@ -62,7 +64,7 @@ class HardwareMixin(BaseMixin):
 
     def onHardwareEnd(self, name):
         if self.level == 5:
-            self.hardwareList.append(self.hardwareEntry)
+            self.result.append(self.hardwareEntry)
 
     def onProductStart(self, name, attrs):
         attrs = self.convertAttributes(attrs)
@@ -90,6 +92,28 @@ class HardwareMixin(BaseMixin):
             pass
             #print "*** NO hardware2Program!!!",
             #print " " * self.level, "<", self.level, self.tags[-1], attrs
+
+
+class CatalogMixin(BaseMixin):
+    sections = []
+    catalogLevel = 0
+
+    def onCatalogSectionStart(self, name, attrs):
+        self.catalogLevel += 1
+        attrs = self.convertAttributes(attrs)
+        self.convert(attrs, 'nonRegRelevantDataVersion', int)
+        self.sections.append(attrs)
+
+    def onCatalogSectionEnd(self, name):
+        self.catalogLevel -= 1
+        self.sections.pop()
+
+    def onCatalogItemStart(self, name, attrs):
+        attrs = self.convertAttributes(attrs)
+        self.convert(attrs, 'numbers', int)
+        self.convert(attrs, 'nonRegRelevantDataVersion', int)
+        attrs['sections'] = copy(self.sections)
+        self.result.append(attrs)
 
 
 class LanguageMixin(BaseMixin):
