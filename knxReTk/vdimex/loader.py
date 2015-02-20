@@ -28,7 +28,6 @@ __author__  = 'Christoph Schueler'
 __version__ = '0.1.0'
 
 
-#from array import array
 from base64 import b64encode
 from collections import namedtuple, defaultdict, OrderedDict
 from decimal import Decimal
@@ -43,8 +42,6 @@ import hashlib
 
 
 XML_DECL = '<?xml version="1.0" encoding="utf-8" ?>'
-
-BASE_PATH = r'C:\projekte\csProjects\pyKNX'
 
 ColumnDefinition = namedtuple("ColumnDefinition", "")
 ImageRecord = namedtuple("ImageRecord", "image fsPath hash")

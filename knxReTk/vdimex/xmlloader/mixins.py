@@ -93,27 +93,33 @@ class HardwareMixin(BaseMixin):
             #print "*** NO hardware2Program!!!",
             #print " " * self.level, "<", self.level, self.tags[-1], attrs
 
+from pprint import pprint
+
 
 class CatalogMixin(BaseMixin):
-    sections = []
     catalogLevel = 0
+    result = {"sections": [], "items": []}
+    current = result
+    currentItem = None
 
     def onCatalogSectionStart(self, name, attrs):
         self.catalogLevel += 1
         attrs = self.convertAttributes(attrs)
         self.convert(attrs, 'nonRegRelevantDataVersion', int)
-        self.sections.append(attrs)
+        self.current.update(attrs)
+        self.currentItem = self.current
+        newSection = {"sections": [], "items": []}
+        self.current["sections"].append(newSection)
+        self.current = newSection
 
     def onCatalogSectionEnd(self, name):
         self.catalogLevel -= 1
-        self.sections.pop()
 
     def onCatalogItemStart(self, name, attrs):
         attrs = self.convertAttributes(attrs)
         self.convert(attrs, 'numbers', int)
         self.convert(attrs, 'nonRegRelevantDataVersion', int)
-        attrs['sections'] = copy(self.sections)
-        self.result.append(attrs)
+        self.currentItem["items"].append(attrs)
 
 
 class LanguageMixin(BaseMixin):
