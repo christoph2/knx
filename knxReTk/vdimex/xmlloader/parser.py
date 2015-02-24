@@ -44,12 +44,12 @@ class XMLHandler(ContentHandler):
     def __init__(self):
         self.level = 0
         self.pos = 0
-
+        self.currentElement = None
         self.tags = []
         self.uniqueTags = []
+        self.unhandledTags = set()
 
     def startElement(self, name, attrs):
-        #name = camelCaseLower(name)
         attrs = dict(attrs)
 
         tempAttrs = dict()
@@ -58,12 +58,16 @@ class XMLHandler(ContentHandler):
             tempAttrs[camelCaseLower(k)] = v
         attrs = tempAttrs
 
+        self.currentElement = attrs
+
         self.level += 1
         self.tags.append(name)
 
         callback = "on%sStart" % name
         if hasattr(self, callback):
             getattr(self, callback)(name, attrs)
+        else:
+            self.unhandledTags.add((self.level, name, ))
 
         if len(self.uniqueTags) < self.level:
             self.uniqueTags.append(set())
@@ -74,7 +78,7 @@ class XMLHandler(ContentHandler):
     def characters(self, ch):
         text = ch.strip()
         if text:
-            print "*** XML-TEXT-NODE: ", text
+            self.currentElement['textContent'] = text
 
     def endElement(self, name):
         callback = "on%sEnd" % name
