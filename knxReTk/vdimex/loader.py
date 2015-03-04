@@ -46,7 +46,6 @@ XML_DECL = '<?xml version="1.0" encoding="utf-8" ?>'
 ColumnDefinition = namedtuple("ColumnDefinition", "")
 ImageRecord = namedtuple("ImageRecord", "image fsPath hash")
 
-
 def slicer(iteratable, sliceLength, resultType = None):
     if resultType is None:
         resultType = type(iteratable)
@@ -222,6 +221,9 @@ class TableBuilder(object):
         self.columnsByNumber[column.colNumber] = column
         self.columnCount += 1
 
+    def getColumns(self):
+        return [c.asDict() for c in self.columns]
+
     def startInstance(self):
         pass
 
@@ -353,7 +355,7 @@ class CatalogueReverser(object):
                             rowNumber = int(ma.group('rowNumber'))
                             columnIdx = 1
                             self.state = STATE_ROW
-                            self.startTable(tb.name, [c.asDict() for c in tb.columns])
+                            self.startTable(tb.name, tableNumber, tb.getColumns())
                 elif self.state == STATE_ROW:
                     columnBuilder.add(line)
                     if lineNumber <= len(block) - 1:
@@ -391,9 +393,6 @@ class CatalogueReverser(object):
 
         self.onFinished()
 
-    #def parseTableHeader(self):
-    #    pass
-
     def parserTableData(self):
         tableNumber = int(ma.groupdict('tableNumber'))
         rowNumber = int(ma.groupdict('rowNumber'))
@@ -408,7 +407,7 @@ class CatalogueReverser(object):
     def onRow(self, rowInfo):
         pass
 
-    def startTable(self, name, columnList):
+    def startTable(self, name, tableNumber, columnList):
         pass
 
     def endTable(self, name):
@@ -417,12 +416,10 @@ class CatalogueReverser(object):
 
 def process(clientClass, fileName, password):
     result = getZipFileContents(fileName, password)
-    #print "\n", "=" * 80
     for key, (data, path, hashValue) in result.items():
         _, fname = os.path.split(key)
         if fname in ('ets2.vd_', 'ets.vd_', 'ets.pr_'):
             rev = clientClass(data, path, os.path.split(fileName)[1].replace('.', '_'), hashValue)
             rev.parse()
-            print
-    #print "\n", "=" * 80
+
 

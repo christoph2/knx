@@ -33,7 +33,7 @@ import zlib
 ESCAPE = re.compile(r'\.[0-9A-F]{2}')
 NON_ALNUM = re.compile(r'[^a-z0-1]', re.I)
 
-def escape_(value):
+def escape(value):
     """This section summarizes the naming rules for elements of the KNX XML schema. All these IDs are constructed
     so that they are globally unique. Detailed descriptions are included in the individual element descriptions.
     Note that many IDs of subordinate elements start with the ID of the parent element, then – separated by an
@@ -57,11 +57,13 @@ def escape_(value):
                 result.append(ch)
         return ''.join(result)
 
+"""
 def nonAlNumReplacer(match):
     return ".%X" % ord(match.group())
 
 def escape(text):
     return NON_ALNUM.sub(nonAlNumReplacer, text)
+"""
 
 def unescaper(match):
     return chr(int(match.group()[1:], 16))
