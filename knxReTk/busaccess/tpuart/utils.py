@@ -3,7 +3,7 @@
 # -*- coding: utf-8 -*-
 
 __copyright__ = """
-   Konnex / EIB Reverserz Toolkit
+   KONNEX/EIB-Protocol-Stack.
 
    (C) 2001-2014 by Christoph Schueler <cpu12.gems@googlemail.com>
 

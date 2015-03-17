@@ -4,7 +4,7 @@
 __copyright__ = """
    Konnex / EIB Reverserz Toolkit
 
-   (C) 2001-2014 by Christoph Schueler <cpu12.gems@googlemail.com>
+   (C) 2001-2015 by Christoph Schueler <cpu12.gems@googlemail.com>
 
    All Rights Reserved
 
@@ -24,6 +24,7 @@ __copyright__ = """
 
    s. FLOSS-EXCEPTION.txt
 """
+
 __author__  = 'Christoph Schueler'
 __version__ = '0.1.0'
 
