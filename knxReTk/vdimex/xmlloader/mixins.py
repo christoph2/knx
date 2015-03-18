@@ -94,35 +94,67 @@ class HardwareMixin(BaseMixin):
             #print " " * self.level, "<", self.level, self.tags[-1], attrs
 
 
+from pprint import pprint
+
 class CatalogMixin(BaseMixin):
+
+    def printit (self):
+        print "=" * 60
+        pprint(self.result, indent = 3)
+        print "=" * 60
 
     def __init__(self):
         self.catalogLevel = 0
         self.result = {"sections": [], "items": []}
+        #self.result = None
         self.stack = []
-        self.currentItem = self.result
-        self.stack.append(self.currentItem)
-        
+        self.currentSection = self.result
+        self.stack.append(self.currentSection)
+        self.sections = []
+        self.items = []
+
     def onCatalogSectionStart(self, name, attrs):
         self.catalogLevel += 1
         attrs = self.convertAttributes(attrs)
         self.convert(attrs, 'nonRegRelevantDataVersion', int)
-        self.currentItem.update(attrs)
+
+        mySection = {"sections": [], "items": []}
+        mySection.update(attrs)
+        self.sections.append(mySection)
+
+        self.currentSection.update(attrs)
+        #self.printit()
         newSection = {"sections": [], "items": []}
-        self.currentItem['sections'].append(newSection)
-        self.currentItem = newSection
-        self.stack.append(self.currentItem)
+        self.currentSection['sections'].append(newSection)
+        self.currentSection = newSection
+        self.stack.append(newSection)
 
     def onCatalogSectionEnd(self, name):
         self.catalogLevel -= 1
-        self.currentItem = self.stack.pop()
-#        self.currentItem = self.stack[-1]
+        self.stack.pop()
+        #self.currentSection = self.stack.pop()
+        #mySection = self.sections.pop()
+        mySection = self.sections[self.catalogLevel]
+        mySection['sections'] = self.items
+        self.items = []
+        if self.catalogLevel > 0:
+            self.sections[self.catalogLevel]['sections'].append(mySection)
+            #pprint(self.sections[self.catalogLevel], indent = 3)
+        else:
+            print "Ready"
+            for item in self.sections:
+                #pprint(item)
+                pass
+        self.currentSection = self.stack[-1]
 
     def onCatalogItemStart(self, name, attrs):
         attrs = self.convertAttributes(attrs)
         self.convert(attrs, 'numbers', int)
         self.convert(attrs, 'nonRegRelevantDataVersion', int)
-        self.currentItem["items"].append(attrs)
+        #self.currentSection["items"].append(attrs)
+        self.items.append(attrs)
+        self.stack[-1]['items'].append(attrs)
+        #self.printit()
 
 
 class LanguageMixin(BaseMixin):

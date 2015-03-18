@@ -71,7 +71,6 @@ def getZipFileContents(fname, password):
             image = inf.read()
             result[fl.filename] = ImageRecord(image, completePath, hashlib.sha1(image).hexdigest())
     print "-" * 79
-    print
     return result
 
 ##
