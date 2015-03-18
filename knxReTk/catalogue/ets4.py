@@ -71,3 +71,4 @@ def unescape(value):
 
 def masterXML():
     return zlib.decompress(readConfigData('knxReTk', 'knx_master.Z'))
+
