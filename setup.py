@@ -16,6 +16,7 @@ setup(
     author_email = 'cpu12.gems@googlemail.com',
     url = 'https://www.github.com/Christoph2/knx',
     packages = packagez('knxReTk'),
+    install_requires = ['mako', 'pymongo', 'tornado', 'pyserial', 'pyro4', 'requests'],
     entry_points = {
 	'console_scripts': [
 		'vd_exporter = knxReTk.catalogue.vd_exporter:main'
