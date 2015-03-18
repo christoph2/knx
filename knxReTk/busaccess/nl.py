@@ -102,21 +102,17 @@ class NetworkLayer(Layer):
 
     SERVICE_GROUP = IMI.NL_SERVICES
 
-    #counter = 0
-
     def dispatchIncoming(self, message, services):
-        #self.counter += 1
         frame = message.asStandardFrame()
         if frame.isMulticastAddressed:
-            print "NetworkLayer: Multicast_Ind", message.confirmed
             if frame.dest == 0x0000:
                 # Broadcast-Communication.
                 message.service = services[0]
             else:
                 message.service = services[1]
         else:
-            if message.confirmed:
-                print "NetworkLayer: Indivual_Ind", hex(frame.dest),
+            #if message.confirmed:
+            #    print "NetworkLayer: Indivual_Ind", hex(frame.dest),
             message.service = services[2]
         self.post(message)
 
