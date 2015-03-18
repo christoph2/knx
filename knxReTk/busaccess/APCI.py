@@ -28,6 +28,55 @@ __copyright__ = """
 __author__  = 'Christoph Schueler'
 __version__ = '0.1.0'
 
+from knxReTk.utilz.classes import SingletonBase
+
+class APCIType(SingletonBase):
+    APCI_GROUP_VALUE_READ           = 0     # Multicast.
+    APCI_GROUP_VALUE_RESP           = 1
+    APCI_GROUP_VALUE_WRITE          = 2
+
+    APCI_INDIVIDUAL_ADDRESS_WRITE   = 3     # Broadcast.
+    APCI_INDIVIDUAL_ADDRESS_READ    = 4
+    APCI_INDIVIDUAL_ADDRESS_RESP    = 5
+
+    APCI_ADC_READ                   = 6     # P2P-Connection-Oriented.
+    APCI_ADC_RESP                   = 7
+    APCI_MEMORY_READ                = 8
+    APCI_MEMORY_RESP                = 9
+    APCI_MEMORY_WRITE               = 10
+
+    APCI_USER_MSG                   = 11    # User-defined Messages.
+
+    APCI_DEVICE_DESCRIPTOR_READ     = 12    # P2P-Conection-Less.
+    APCI_DEVICE_DESCRIPTOR_RESP     = 13
+
+    APCI_RESTART                    = 14    # P2P-Connection-Oriented.
+
+    APCI_ESCAPE                     = 15    # Others, escape.
+
+    _VALUES = {
+        APCI_GROUP_VALUE_READ:          'APCI_GROUP_VALUE_READ',
+        APCI_GROUP_VALUE_RESP:          'APCI_GROUP_VALUE_RESP',
+        APCI_GROUP_VALUE_WRITE:         'APCI_GROUP_VALUE_WRITE',
+        APCI_INDIVIDUAL_ADDRESS_WRITE:  'APCI_INDIVIDUAL_ADDRESS_WRITE',
+        APCI_INDIVIDUAL_ADDRESS_READ:   'APCI_INDIVIDUAL_ADDRESS_READ',
+        APCI_INDIVIDUAL_ADDRESS_RESP:   'APCI_INDIVIDUAL_ADDRESS_RESP',
+        APCI_ADC_READ:                  'APCI_ADC_READ',
+        APCI_ADC_RESP:                  'APCI_ADC_RESP',
+        APCI_MEMORY_READ:               'APCI_MEMORY_READ',
+        APCI_MEMORY_RESP:               'APCI_MEMORY_RESP',
+        APCI_MEMORY_WRITE:              'APCI_MEMORY_WRITE',
+        APCI_USER_MSG:                  'APCI_USER_MSG',
+        APCI_DEVICE_DESCRIPTOR_READ:    'APCI_DEVICE_DESCRIPTOR_READ',
+        APCI_DEVICE_DESCRIPTOR_RESP:    'APCI_DEVICE_DESCRIPTOR_RESP',
+        APCI_RESTART:                   'APCI_RESTART',
+        APCI_ESCAPE:                    'APCI_ESCAPE',
+    }
+
+    @classmethod
+    def toString(klass, value):
+        return klass._VALUES.get(value, '<INVALID>')
+
 
 # Group-Services.
 A_GROUPVALUE_READ                      = 0x000
@@ -109,3 +158,4 @@ A_GROUPPROPVALUE_READ                  = 0x3E8
 A_GROUPPROPVALUE_RESPONSE              = 0x3E9
 A_GROUPPROPVALUE_WRITE                 = 0x3EA
 A_GROUPPROPVALUE_INFOREPORT            = 0x3EB # s. KNX 10_01 Logical Tag Extended.
+
