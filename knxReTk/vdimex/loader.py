@@ -64,7 +64,11 @@ def getZipFileContents(fname, password):
         with zipfile.ZipFile(fname) as zf:
             zf.printdir()
             for fl in zf.filelist:
-                inf = zf.open(fl, 'r', password)
+                try:
+                    inf = zf.open(fl, 'r', password)
+                except RuntimeError as e:
+                    print str(e)
+                    return dict()
                 completePath = os.path.join(targetDirectoty, fl.filename)
                 basedir, filename = os.path.split(completePath)
                 if not os.access(basedir, os.F_OK):
