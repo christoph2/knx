@@ -30,6 +30,7 @@ __version__ = '0.1.0'
 
 import array
 from collections import namedtuple
+import struct
 import threading
 import Queue
 
@@ -47,6 +48,10 @@ NO_ROUTING_CTRL     = 7
 HOP_COUNT           = 6
 
 # Addr: 0061 Addr: 1152
+
+def wordToBytes(w):
+    h, l = struct.pack(">H", w)
+    return (ord(h), ord(l), )
 
 """
 typedef uint8_t Knx_MessageType[MSG_LEN];
@@ -116,8 +121,9 @@ class StandardFrame(RepresentationMixIn):
 
     @source.setter
     def source(self, value):
-        self._frame[1] = bytes.loByte(value)
-        self._frame[2] = bytes.hiByte(value)
+        h, l = wordToBytes(value)
+        self._frame[1] = h
+        self._frame[2] = l
 
     @property
     def dest(self):
@@ -125,8 +131,9 @@ class StandardFrame(RepresentationMixIn):
 
     @dest.setter
     def dest(self, value):
-        self._frame[3] = bytes.loByte(value)
-        self._frame[4] = bytes.hiByte(value)
+        h, l = wordToBytes(value)
+        self._frame[3] = h
+        self._frame[4] = l
 
     @property
     def npci(self):
@@ -146,11 +153,13 @@ class StandardFrame(RepresentationMixIn):
 
     @property
     def apci(self):
-        return self._frame[7]
+        return  (self.tpci << 8) | self._frame[7]
 
     @apci.setter
     def apci(self, value):
-        self._frame[7] = bytes.loByte(value)
+        h, l = wordToBytes(value)
+        self.tpci |= h
+        self._frame[7] = l
 
     @property
     def data(self):
@@ -215,13 +224,6 @@ class StandardFrame(RepresentationMixIn):
         else:
             hopCount = HOP_COUNT
         self.npci |= ((hopCount & 0x07) << 4)
-
-    """
-/* check: geht 'GetAPCI' nicht effizienter??? */
-#define KnxMsg_GetAPCI(pBuffer)                 ((uint16_t)(KnxMsg_GetMessagePtr((pBuffer))->tpci << \
-                                                          8) | (KnxMsg_GetMessagePtr((pBuffer))->apci))
-#define KnxMsg_SetAPCI(pBuffer, apci)           (*(uint16_t *)&(pBuffer)->msg[6] = Utl_Htons((apci))
-    """
 
 
 class MessageBuffer(RepresentationMixIn):
