@@ -35,7 +35,7 @@ import time
 import types
 
 from knxReTk.busaccess.tpuart import serialport
-from knxReTk.busaccess.tpuart import utils
+from knxReTk.utilz import helper
 from knxReTk.busaccess.layer import Layer
 from knxReTk.busaccess import knx
 from knxReTk.utilz.threads import Thread
@@ -459,14 +459,12 @@ class ReceiptionCommand(BaseProcessor):
         frameFormat = (octet & 0xc0) >> 6
         rep = (octet & 0x20) >> 5
         klass = (octet & 0x0c) >> 2
-        #print "FF: %s R: %s Class: %s" % (self.FRAME_FORMAT.get(frameFormat, '??'), rep, self.CLASSES.get(klass, '??').title())
         self.idx = 1
         self.action = self.consecutive
         self.parent.port.write(0x11)
 
     def consecutive(self, octet):
         self.frame.append(octet)
-        print "C:", hex(octet)
         if self.idx == 5:
             self.bytecount = (octet & 0x0f) + 2
         else:
@@ -477,7 +475,10 @@ class ReceiptionCommand(BaseProcessor):
 
     def last(self, octet):
         self.frame.append(octet)
-        print "   *** LAST-BYTE: ", hex(octet)
+        mb = MessageBuffer(self.frame)
+        mb.service = IMI.L_DATA_IND
+        self.parent.dataLinkLayer.post(mb)
+        self.frame = []
         self._done = True
         self.action = self.first
 
@@ -537,7 +538,7 @@ class TPUARTServer(Thread):
         if self.state == AWAITING_RESPONSE_LOCAL:
             if self.processor.done:
                 remaining = [] if len(self.processor.frame) == 1 else frame[1 : ]
-                print "Response-Frame: '%s{%s}'" % (self.serviceName(self.processor.frame[0]), remaining)
+                #print "Response-Frame: '%s{%s}'" % (self.serviceName(self.processor.frame[0]), remaining)
                 self.state = IDLE
                 self.processor = NullProcessor(self)
                 self.timer.cancel()
@@ -554,7 +555,7 @@ class TPUARTServer(Thread):
                 print "   *** U_State_Ind"
             maskedOctet = octet & 0xd3
             if maskedOctet == L_Data_Standard_ind:
-                print "   *** L_Data_Standard_ind"
+                #print "   *** L_Data_Standard_ind"
                 self.processor = ReceiptionCommand(self)
                 self.processor(octet)
                 self.state = RECEIVING
@@ -584,8 +585,10 @@ class TPUARTServer(Thread):
         self.sendBuffer = frame
         self.processor = receiverClass(self)
         frame = wrappingFunc(frame)
+
         #if isinstance(frame, (list, tuple)):
-        #    print "WRITE-FRAME: ", utils.hexDump(frame)
+        #    print "WRITE-FRAME: ", helper.hexDump(frame)
+
         self.port.write(frame)
         self.timer = threading.Timer(self.calculateTimeout(frame), self.timeout, [self])
         self.timer.start()
@@ -596,7 +599,7 @@ class TPUARTServer(Thread):
         return self.command(frame, desiredState, ConfirmedLocalCommand, identity)
 
     def requestTransmission(self, frame):
-        frame.append(utils.checksum(frame))
+        frame.append(helper.checksum(frame))
         self.expect(0x00, 0x00, len(frame))
         return self.command(frame, AWAITING_RESPONSE_TRANSMISSION, TransmissionCommand, makeLDataRequest)
 
@@ -631,7 +634,7 @@ class TPUARTServer(Thread):
         self.internalCommandUnconfirmed([U_MxRstCnt_req, repetitions])
 
     def setAddress(self, address):
-        self.internalCommandUnconfirmed([U_SetAddress_req, utils.wordToBytes(address)])
+        self.internalCommandUnconfirmed([U_SetAddress_req, helper.wordToBytes(address)])
 
     def reset(self):
         self.expect(U_Reset_ind, 0xff, 1)
@@ -656,7 +659,7 @@ class TPUARTServer(Thread):
         frame = connectReq(physAddr)
         self.expect(0x00, 0x00, len(frame))
         #frame = makeLDataRequest(frame)
-        #print "FRAME TO TRANSMIT: ", utils.hexDump(frame)
+        #print "FRAME TO TRANSMIT: ", helper.hexDump(frame)
         self.requestTransmission(frame)
 
 
@@ -690,8 +693,8 @@ def makeLDataRequest(frame):
 def connectReq(physAddr):
     prolog = [0xBC, 0xAF, 0xFE]
     epilog = [0x60, 0x80]
-    request = prolog + utils.wordToBytes(physAddr) + epilog
-    fcs = utils.checksum(request)
+    request = prolog + helper.wordToBytes(physAddr) + epilog
+    fcs = helper.checksum(request)
     request.append(fcs)
     return request
 
