@@ -60,16 +60,20 @@ def getZipFileContents(fname, password):
     targetDirectoty = os.path.join(absPath, subDirectory)
     print "Contents of: '%s':" % fname
     print "-" * 79
-    with zipfile.ZipFile(fname) as zf:
-        zf.printdir()
-        for fl in zf.filelist:
-            inf = zf.open(fl, 'r', password)
-            completePath = os.path.join(targetDirectoty, fl.filename)
-            basedir, filename = os.path.split(completePath)
-            if not os.access(basedir, os.F_OK):
-                os.makedirs(basedir)
-            image = inf.read()
-            result[fl.filename] = ImageRecord(image, completePath, hashlib.sha1(image).hexdigest())
+    try:
+        with zipfile.ZipFile(fname) as zf:
+            zf.printdir()
+            for fl in zf.filelist:
+                inf = zf.open(fl, 'r', password)
+                completePath = os.path.join(targetDirectoty, fl.filename)
+                basedir, filename = os.path.split(completePath)
+                if not os.access(basedir, os.F_OK):
+                    os.makedirs(basedir)
+                image = inf.read()
+                result[fl.filename] = ImageRecord(image, completePath, hashlib.sha1(image).hexdigest())
+    except zipfile.BadZipfile as e:
+        print str(e)
+        return dict()
     print "-" * 79
     return result
 

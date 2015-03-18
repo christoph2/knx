@@ -27,9 +27,6 @@ __copyright__ = """
 __author__  = 'Christoph Schueler'
 __version__ = '0.1.0'
 
-#from collections import namedtuple, OrderedDict
-#import Queue
-#import sys
 import threading
 
 class Thread(threading.Thread):
@@ -57,13 +54,13 @@ class Thread(threading.Thread):
         return "%s-%u" % (self.__class__.__name__, self.ident)
 
     def run(self):
-        print "Starting {0} thread.".format(self.getName())
+        #print "Starting {0} thread.".format(self.getName())
         while True:
             signal = self.quitEvent.wait(timeout = 0.01)
             if signal == True:
                 break
             self.execute()
-        print "Exiting {0} thread.".format(self.getName())
+        #print "Exiting {0} thread.".format(self.getName())
 
     def execute(self):
         raise NotImplementedError("'execute()' method needs to be overriden.")

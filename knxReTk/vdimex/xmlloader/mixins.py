@@ -141,7 +141,7 @@ class CatalogMixin(BaseMixin):
             self.sections[self.catalogLevel]['sections'].append(mySection)
             #pprint(self.sections[self.catalogLevel], indent = 3)
         else:
-            print "Ready"
+            #print "Ready"
             for item in self.sections:
                 #pprint(item)
                 pass

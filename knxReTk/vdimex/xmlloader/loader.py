@@ -179,8 +179,8 @@ def processXML(filename):
                 continue
             #pprint(sorted(resultObj.unhandledTags))
             unhandledTags = unhandledTags.union(resultObj.unhandledTags)
-    print "FINISHED."
-
+    print "Finished Loading."
+    print
     #pprint(sorted(unhandledTags))
 
 
