@@ -41,7 +41,7 @@ from knxReTk.catalogue import bootstrap
 from knxReTk.vdimex.loader import CatalogueReverser, process
 from knxReTk.vdimex.xmlloader.loader import processXML
 
-CLASSIC_ETS = re.compile(r'vd[x1-5]$', re.I)
+CLASSIC_ETS = re.compile(r'vd[x1-5] | pr[x1-5]$', re.I | re.VERBOSE)
 MODERN_ETS = re.compile(r'knxprod$', re.I)
 
 def getMongoClient(host = 'localhost', port = None):
