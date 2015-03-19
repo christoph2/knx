@@ -37,6 +37,7 @@ import sys
 import pymongo as mongo
 from bson.objectid import ObjectId
 
+from knxReTk.catalogue import bootstrap
 from knxReTk.vdimex.loader import CatalogueReverser, process
 from knxReTk.vdimex.xmlloader.loader import processXML
 
@@ -48,6 +49,7 @@ def getMongoClient(host = 'localhost', port = None):
 
 try:
     mongoClient = getMongoClient()
+    bootstrap.init(mongoClient)
 except Exception as e:
     print "Problem with Database Connection: '%s'." % str(e)
     print "Exiting."

@@ -11,12 +11,12 @@ def packagez(base):
 setup(
     name = 'knxReTk',
     version = '0.1.0',
-    description = "'Konnex / EIB Reverserz Toolkit",
+    description = "'Konnex / EIB Expert Toolkit",
     author = 'Christoph Schueler',
     author_email = 'cpu12.gems@googlemail.com',
     url = 'https://www.github.com/Christoph2/knx',
     packages = packagez('knxReTk'),
-    install_requires = ['mako', 'pymongo', 'tornado', 'pyserial', 'pyro4', 'requests'],
+    install_requires = ['mako', 'pymongo', 'tornado', 'pyserial', 'pyro4', 'requests', 'colorama'],
     entry_points = {
         'console_scripts': [
                 'ets_loader = knxReTk.vdimex.ets_loader:main',
