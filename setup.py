@@ -18,8 +18,20 @@ setup(
     packages = packagez('knxReTk'),
     install_requires = ['mako', 'pymongo', 'tornado', 'pyserial', 'pyro4', 'requests'],
     entry_points = {
-	'console_scripts': [
-		'vd_exporter = knxReTk.catalogue.vd_exporter:main'
+        'console_scripts': [
+                'ets_loader = knxReTk.vdimex.ets_loader:main',
+                'knx_blink          = knxReTk.busaccess.knx_blink:main',
+                'knx_dump           = knxReTk.busaccess.knx_dump:main',
+                'knx_progmode       = knxReTk.busaccess.knx_progmode:main',
+                'knx_setaddr        = knxReTk.busaccess.knx_setaddr:main',
+                'knx_busmon         = knxReTk.busaccess.knx_busmon:main',
+                'knx_load           = knxReTk.busaccess.knx_load:main',
+                'knx_properties     = knxReTk.busaccess.knx_properties:main',
+                'knx_devinfo        = knxReTk.busaccess.knx_devinfo:main',
+                'knx_mnt            = knxReTk.busaccess.knx_mnt:main',
+                'knx_scan           = knxReTk.busaccess.knx_scan:main',
+                'knx_devstate       = knxReTk.busaccess.knx_devstate:main',
+                'knx_send           = knxReTk.busaccess.knx_send:main',
         ],
     },
     data_files = [
