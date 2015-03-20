@@ -273,7 +273,7 @@ class ApplicationMixin(BaseMixin):
         attrs = self.convertAttributes(attrs)
         self.convert(attrs, 'address', int)
         self.convert(attrs, 'size', int)
-        self.convert(attrs, 'userMemory', int)
+        self.convert(attrs, 'userMemory', toBoolean)
         attrs['data'] = None
         attrs['mask'] = None
         attrs['type'] = "absolute"
