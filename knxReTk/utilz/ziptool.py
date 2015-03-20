@@ -41,7 +41,7 @@ def getZipFileContents(fname, password = None):
     subDirectory = os.path.splitext(os.path.split(fname)[1])[0]
     targetDirectoty = os.path.join(absPath, subDirectory)
     with zipfile.ZipFile(fname) as zf:
-        zf.printdir()
+        #zf.printdir()
         for fl in zf.filelist:
             inf = zf.open(fl, 'r', password)
             completePath = os.path.join(targetDirectoty, fl.filename)
