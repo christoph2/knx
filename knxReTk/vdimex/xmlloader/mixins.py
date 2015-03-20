@@ -27,8 +27,10 @@ __copyright__ = """
 __author__  = 'Christoph Schueler'
 __version__ = '0.1.0'
 
+from copy import copy
 
 toBoolean = lambda v: True if (v == '1' or v == 'true') else False
+
 
 class BaseMixin(object):
 
@@ -105,12 +107,8 @@ class CatalogMixin(BaseMixin):
 
     def __init__(self):
         self.catalogLevel = 0
-        self.result = {"sections": [], "items": []}
-        #self.result = None
-        self.stack = []
-        self.currentSection = self.result
-        self.stack.append(self.currentSection)
-        self.sections = []
+        self.stack = [self.result]
+        self.currentSection = None
         self.items = []
 
     def onCatalogSectionStart(self, name, attrs):
@@ -118,44 +116,32 @@ class CatalogMixin(BaseMixin):
         attrs = self.convertAttributes(attrs)
         self.convert(attrs, 'nonRegRelevantDataVersion', int)
 
-        mySection = {"sections": [], "items": []}
-        mySection.update(attrs)
-        self.sections.append(mySection)
+        #print "  " * self.catalogLevel, attrs
 
-        self.currentSection.update(attrs)
-        #self.printit()
-        newSection = {"sections": [], "items": []}
-        self.currentSection['sections'].append(newSection)
-        self.currentSection = newSection
-        self.stack.append(newSection)
+        self.newSection = {"sections": [], "items": []}
+        self.newSection.update(attrs)
+        self.stack.append(self.newSection)
+        if self.currentSection:
+            self.currentSection['sections'].append(self.newSection)
+        else:
+            self.result = self.currentSection
+        self.currentSection = self.newSection
 
     def onCatalogSectionEnd(self, name):
         self.catalogLevel -= 1
-        self.stack.pop()
-        #self.currentSection = self.stack.pop()
-        #mySection = self.sections.pop()
-        mySection = self.sections[self.catalogLevel]
-        mySection['sections'] = self.items
-        self.items = []
         if self.catalogLevel > 0:
-            self.sections[self.catalogLevel]['sections'].append(mySection)
-            #pprint(self.sections[self.catalogLevel], indent = 3)
+            self.stack.pop()
+            self.currentSection = self.stack[-1]
+            self.items = []
         else:
-            #print "Ready"
-            for item in self.sections:
-                #pprint(item)
-                pass
-        self.currentSection = self.stack[-1]
+            self.result = self.currentSection
+            #self.printit()
 
     def onCatalogItemStart(self, name, attrs):
         attrs = self.convertAttributes(attrs)
         self.convert(attrs, 'numbers', int)
         self.convert(attrs, 'nonRegRelevantDataVersion', int)
-        #self.currentSection["items"].append(attrs)
-        self.items.append(attrs)
-        self.stack[-1]['items'].append(attrs)
-        #self.printit()
-
+        self.currentSection["items"].append(attrs)
 
 class LanguageMixin(BaseMixin):
     """Process translation entries.
