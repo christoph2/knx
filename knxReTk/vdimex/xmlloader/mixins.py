@@ -107,9 +107,13 @@ class CatalogMixin(BaseMixin):
 
     def __init__(self):
         self.catalogLevel = 0
+        self.result = {'sections': [], '_id': self.hashValue}
         self.stack = [self.result]
         self.currentSection = None
         self.items = []
+
+    def onManufacturerStart(self, name, attrs):
+        self.result.update(attrs)
 
     def onCatalogSectionStart(self, name, attrs):
         self.catalogLevel += 1
@@ -124,7 +128,7 @@ class CatalogMixin(BaseMixin):
         if self.currentSection:
             self.currentSection['sections'].append(self.newSection)
         else:
-            self.result = self.currentSection
+            pass
         self.currentSection = self.newSection
 
     def onCatalogSectionEnd(self, name):
@@ -134,8 +138,7 @@ class CatalogMixin(BaseMixin):
             self.currentSection = self.stack[-1]
             self.items = []
         else:
-            self.result = self.currentSection
-            #self.printit()
+            self.result['sections'].append(self.currentSection)
 
     def onCatalogItemStart(self, name, attrs):
         attrs = self.convertAttributes(attrs)

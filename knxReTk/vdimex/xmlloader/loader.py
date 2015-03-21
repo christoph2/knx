@@ -127,8 +127,8 @@ def processCatalog(db, resultObj, collection):
 
     translations = resultObj.translations
 
-    if resultObj.result['_id'] in translations:
-        translate(resultObj.result, translations[resultObj.result['_id']])
+#    if resultObj.result['_id'] in translations:
+#        translate(resultObj.result, translations[resultObj.result['_id']])
 
     #db[collection].insert(resultObj.result)
     db[collection].update({'_id': resultObj.result['_id']}, resultObj.result, upsert = True)
@@ -166,6 +166,7 @@ def processXML(filename):
     for (data, path, hashValue) in getZipFileContents(filename):
         if path.endswith('xml'):
             _, fname = os.path.split(path)
+            XMLHandler.hashValue = hashValue
             print path
             if fname == 'Catalog.xml':
                 resultObj = parse(data, CatalogParser)
