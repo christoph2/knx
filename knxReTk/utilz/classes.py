@@ -40,7 +40,8 @@ class SingletonBase(object):
             try:
                 cls._lock.acquire()
                 if not hasattr(cls, '_instance'):
-                    cls._instance = super(cls.__class__, cls).__new__(cls)
+                    cls._instance = super(SingletonBase, cls).__new__(cls)
+                    #cls._instance = super(cls.__class__, cls).__new__(cls)
             finally:
                 cls._lock.release()
         return cls._instance
