@@ -30,6 +30,8 @@ __version__ = '0.1.0'
 
 import threading
 import types
+from knxReTk.utilz import helper
+from array import array
 
 class SingletonBase(object):
     _lock = threading.Lock()
@@ -55,8 +57,12 @@ class RepresentationMixIn(object):
         result.append("%s {" % self.__class__.__name__)
         for key in keys:
             value = getattr(self, key)
-            if isinstance(value, (int, long, float, types.NoneType)):
+            if isinstance(value, (int, long)):
+                line = "    %s = 0x%X" % (key, value)
+            elif isinstance(value, (float, types.NoneType)):
                 line = "    %s = %s" % (key, value)
+            elif isinstance(value, array):
+                line = "    %s = %s" % (key, helper.hexDump(value))
             else:
                 line = "    %s = '%s'" % (key, value)
             result.append(line)
