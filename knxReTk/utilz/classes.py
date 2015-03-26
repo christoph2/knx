@@ -33,17 +33,17 @@ import types
 from knxReTk.utilz import helper
 from array import array
 
+
 class SingletonBase(object):
     _lock = threading.Lock()
 
-    def __new__(cls):
+    def __new__(cls, *args, **kws):
         # Double-Checked Locking
         if not hasattr(cls, '_instance'):
             try:
                 cls._lock.acquire()
                 if not hasattr(cls, '_instance'):
                     cls._instance = super(SingletonBase, cls).__new__(cls)
-                    #cls._instance = super(cls.__class__, cls).__new__(cls)
             finally:
                 cls._lock.release()
         return cls._instance
