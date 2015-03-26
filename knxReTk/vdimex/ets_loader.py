@@ -38,8 +38,10 @@ import pymongo as mongo
 from bson.objectid import ObjectId
 
 from knxReTk.catalogue import bootstrap
+from knxReTk.catalogue.locales import getLocalCode
 from knxReTk.vdimex.loader import CatalogueReverser, process
 from knxReTk.vdimex.xmlloader.loader import processXML
+from knxReTk.vdimex import preETS4Converter
 
 CLASSIC_ETS = re.compile(r'vd[x1-5] | pr[x1-5]$', re.I | re.VERBOSE)
 MODERN_ETS = re.compile(r'knxprod$', re.I)
@@ -64,20 +66,23 @@ class MongoLoader(CatalogueReverser):
         self.database = mongoClient[uniqueName]
 
     def onHeader(self, headerInfo):
-        db = mongoClient.meta
-        entry = db.catalogues.find_one({"hashValue": headerInfo["hashValue"]})
-        if entry:
-            #print "Skipping '%s', database entry already exists." % (headerInfo['uniqueName'], )
-            pass
-        else:
-            db.catalogues.insert({"hashValue": headerInfo["hashValue"]})
-        print
+        self.headerInfo = headerInfo
+
+        defaultLanguage = self.database.ete_language.find_one({"database_language": 1}, {"language_id": 1, '_id': 0}).get('language_id', 1033)
+        defaultLanguageCode = getLocalCode(defaultLanguage)
+
+        self.database.meta.update({"_id": headerInfo["hashValue"]}, {"_id": headerInfo["hashValue"], "tables": [],
+            "defaultLanguage": defaultLanguageCode,
+            "languages": [getLocalCode(lang['language_id']) for lang in list(self.database.ete_language.find({}, {'_id': 0, 'language_id': 1}))]},
+            safe = True, upsert = True
+        )
+
         print "Importing tables: ",
 
     def onFinished(self):
         print
         print "-" * 79
-        print "| Finished Loading."
+        print "Finished Loading."
         print
 
     def onRow(self, rowInfo):
@@ -85,23 +90,20 @@ class MongoLoader(CatalogueReverser):
         rowInfo['_id'] = hashValue
         #result = self.database[self.currentTable].insert(rowInfo, safe = True)
         result = self.database[self.currentTable].update({"_id": hashValue}, rowInfo, safe = True, upsert = True)
-        """
-        db.nodes.update( {},
-            {"$set": { "short_description": '' } },
-            upsert =  True, multi = False)
-        """
-    
+
     def startTable(self, name, tableNumber, columnList):
         self.currentTable = name
-        #self.database.tables.insert({"_id": name, "number": tableNumber, "columns": columnList}, safe = True, upsert = True)
-        self.database.tables.update({"_id": name},
-            {"_id": name, "number": tableNumber, "columns": columnList},
-            safe = True, upsert = True
+        self.database.meta.update({"_id": self.headerInfo["hashValue"]},
+                                  {"$push": {"tables": {"_id": name, "number": tableNumber, "columns": columnList}}},
+                                  safe = True
         )
         print name,
 
     def endTable(self, name):
         pass
+
+#sys.argv.append(r'C:\projekte\csProjects\knxReTk\tests\SAS_X6-16_VD-TP_XX_V06-11-03.knxprod')
+#sys.argv.append(r'C:\projekte\csProjects\knxReTk\tests\ETS3_ALL.knxprod')
 
 def main():
     if len(sys.argv) != 2:
@@ -115,9 +117,11 @@ def main():
             if CLASSIC_ETS.search(filename):
                 print "Processing:", filename
                 process(MongoLoader, filename, 'Orleander')
+                preETS4Converter.convert(os.path.split(filename)[1].replace('.', '_'))
             elif MODERN_ETS.search(filename):
                 print "Processing:", filename
                 processXML(filename)
 
 if __name__ == '__main__':
     main()
+
