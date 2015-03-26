@@ -58,11 +58,8 @@ def getZipFileContents(fname, password):
     absPath = os.path.abspath(os.path.split(fname)[0])
     subDirectory = os.path.splitext(os.path.split(fname)[1])[0]
     targetDirectoty = os.path.join(absPath, subDirectory)
-    print "Contents of: '%s':" % fname
-    print "-" * 79
     try:
         with zipfile.ZipFile(fname) as zf:
-            zf.printdir()
             for fl in zf.filelist:
                 try:
                     inf = zf.open(fl, 'r', password)
@@ -81,9 +78,6 @@ def getZipFileContents(fname, password):
     print "-" * 79
     return result
 
-##
-##
-##
 SEPARATOR       = "-" * 37
 SEPARATOR2      = re.compile(u'^-{34, 40}$')
 CONTINUATION    = r"\\"
@@ -338,7 +332,6 @@ class CatalogueReverser(object):
             idx += 1
             block, finished = self.block
             self.state = STATE_TABLE
-            #self.parseTableHeader()
             for lineNumber, line in enumerate(block, 1):
                 if self.state == STATE_TABLE:
                     ma = TABLE.match(line)
@@ -428,5 +421,4 @@ def process(clientClass, fileName, password):
         if fname in ('ets2.vd_', 'ets.vd_', 'ets.pr_'):
             rev = clientClass(data, path, os.path.split(fileName)[1].replace('.', '_'), hashValue)
             rev.parse()
-
 

@@ -127,6 +127,7 @@ def processCatalog(db, resultObj, collection):
 
     translations = resultObj.translations
 
+    #translate(resultObj.result, translations)
 #    if resultObj.result['_id'] in translations:
 #        translate(resultObj.result, translations[resultObj.result['_id']])
 
