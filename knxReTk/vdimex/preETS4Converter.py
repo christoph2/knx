@@ -93,20 +93,34 @@ class SubObject(RepresentationMixIn):
     pass
 
 
-class TableMeta(SingletonBase):
+class TableInformation(SingletonBase):
 
     def __init__(self, db):
         self.db = db
-        self.tableMeta = {}
+        if not hasattr(TableInformation, 'tableMeta'):
+            self._setMetaData()
+
+    def _setMetaData(self):
+        TableInformation.tableMeta = {}
+        TableInformation.stringColumns = {}
         meta = self.db.meta.find_one({})
         for table in meta['tables']:
             tcolumns = {}
             for column in table['columns']:
                 number = column.pop('number')
+                if column['type'] == 'varchar' and not column['name'] in ('functional_entity_numb', ):
+                    TableInformation.stringColumns.setdefault(table['_id'], []).append(column['name'])
                 tcolumns[number] = column
-            self.tableMeta[table['_id']] = {'columns': tcolumns}
-        #print self.tableMeta['s19_block']
+            TableInformation.tableMeta[table['_id']] = {'columns': tcolumns}
 
+    def getColumnNameByNumber(self, collection, columnNumber):
+        result = self.getColumnByNumber(collection, columnNumber).get('name', '')
+        if not result:
+            result = TableInformation.stringColumns[collection][columnNumber % 10]
+        return result
+
+    def getColumnByNumber(self, collection, columnNumber):
+        return self.tableMeta[collection]['columns'].get(columnNumber, {})
 
 class TableType(type):
     ColumnCache = {}
@@ -123,22 +137,10 @@ class TableType(type):
                 #setattr(newClass, k, [])
         return newClass
 
-    def getColumnNameByNumber(klass, collection, columnNumber):
-        if (collection, columnNumber) in klass.ColumnCache:
-            return klass.ColumnCache[(collection, columnNumber)]
-
-        result = klass.db.tables.find_one({"_id": collection, "columns.number": columnNumber}, {"columns.$": 1, "_id": 0})
-        if result:
-            result = result['columns'][0]['name']
-            klass.ColumnCache[(collection, columnNumber)] = result
-            return result
-        else:
-            return ''
-
     def setColumnNames(klass, collection, translations):
         result = []
         for translation in translations:
-            translation['column_name'] = klass.getColumnNameByNumber(collection, translation['column_id'])
+            translation['column_name'] = klass.tableMeta.getColumnNameByNumber(collection, translation['column_id'])
             result.append(translation)
         return result
 
@@ -175,12 +177,14 @@ class Table(RepresentationMixIn):
         newObj = super(Table, klass).__new__(klass)
         if key in klass.cache:
             return klass.cache[key]
-        newObj.tableMeta = TableMeta(klass.db)
         return newObj
 
     #@profile
     def __init__(self, key):
         self.key = key
+
+        self.tableMeta = TableInformation(self.db)
+
         for k, v in Table.fetchOne(self.collection, self.keyColumn, self.key).items():
             setattr(self, k, v)
         self.links.sort(key = lambda o: o.order)
@@ -214,6 +218,7 @@ class NameMapper(object):
     def __init__(self, attrs):
         for k, v in attrs.items():
             setattr(self, k, v)
+        self.attribute_map_inverse = dict([(v, k) for k, v in self.attribute_map.items()])
 
     def __getattr__(self, attr):
         if attr in self.attribute_map:
@@ -293,7 +298,6 @@ class CatalogSectionMapper(NameMapper):
     def __init__(self, attrs, numbers):
         super(CatalogSectionMapper, self).__init__(attrs)
         self._identifier = "M-%04u_CS-%s" % (self.manufacturer_id, '-'.join(numbers + [self.Number]))
-        #numbers.append(self.Number)
 
     @property
     def identifier(self):
@@ -304,9 +308,23 @@ class CatalogSectionMapper(NameMapper):
         self._identifier = value
 
 
+class CatalogItemMapper(NameMapper):
+
+    attribute_map = {
+        'Name': 'virtual_device_name' ,
+        'Number': 'virtual_device_number',
+        'VisibleDescription': 'virtual_device_description',
+        'ProductRefId': 'productId',
+        'Hardware2ProgramRefId': 'hardwareProductId',
+        'Id': 'catalogItemId'
+    }
+
+    def __init__(self, attrs):
+        super(CatalogItemMapper, self).__init__(attrs)
+
+
 class CatalogSection(Table):
-    # result = self.db.functional_entity.find({"fun_functional_entity_id": key}).sort([("functional_entity_id", mongo.ASCENDING,), ])
-    #
+
     collection = 'functional_entity'
     keyColumn = 'fun_functional_entity_id'
 
@@ -316,28 +334,30 @@ class GenericBuilder(object):
     def __init__(self, conn, dbName):
         self.conn = conn
         self.db = conn[dbName]
-        self.tableMeta = TableMeta(self.db)
+        self.tableMeta = TableInformation(self.db)
+        Table.tableMeta = TableInformation(self.db)
 
-
-    def getTranslations(self, entityId):
-        result = []
-        translations = list(self.db['text_attribute'].find({'entity_id': entityId}, {'column_id': 1, 'text_attribute_id': 1}))
+    def getTranslations(self, collection, entityId, mapper = None):
+        resultList = []
+        translations = list(self.db.text_attribute.find({'entity_id': entityId}, ).sort([('language_id', 1), ('column_id', 1)]))
         for translation in translations:
-            translation = ['column_id']
-            translation = ['text_attribute_id']
-            result.append()
+            columnName = self.tableMeta.getColumnNameByNumber(collection, translation['column_id'])
+            if mapper:
+                tcn = mapper.attribute_map_inverse.get(columnName)
+                if tcn:
+                    columnName = tcn
+            if translation['text_attribute_text']:
+                resultList.append({"AttributeName": columnName, "Text": translation['text_attribute_text'],
+                    'Language': getLocalCode(translation['language_id'])
+                    })
+        result = {}
+        for group, items in itertools.groupby(resultList, lambda e: e['Language']):
+            titems = []
+            for item in items:
+                item.pop('Language')
+                titems.append(item)
+            result[group] = titems
         return result
-
-    def getColumnNameByNumber(self):
-        """
-        result = self.db.tables.find_one({"_id": collection, "columns.number": columnNumber}, {"columns.$": 1, "_id": 0})
-        if result:
-            result = result['columns'][0]['name']
-            klass.ColumnCache[(collection, columnNumber)] = result
-            return result
-        else:
-            return ''
-        """
 
 class CatalogBuilder(GenericBuilder):
 
@@ -345,12 +365,8 @@ class CatalogBuilder(GenericBuilder):
         super(CatalogBuilder, self).__init__(conn, dbName)
         self.languages = list(self.db.ete_language.find())
         self.devices = {}
-
         Table.db = self.db
         self.createIndices()
-
-        #self.defaultLanguage = self.db.ete_language.find_one({"database_language": 1}, {"language_id": 1, '_id': 0})['language_id']
-        #self.defaultLanguageCode = getLocalCode(self.defaultLanguage)
 
     def createIndices(self):
         self.db.catalog_entry.create_index('catalog_entry_id', mongo.ASCENDING)
@@ -391,20 +407,21 @@ class CatalogBuilder(GenericBuilder):
             am = CatalogSectionMapper(entry, numbers)
             numbers.append(am.Number)
 
-            translations = list(self.db.text_attribute.find({'entity_id': am.functional_entity_id}))
-            if translations:
-                print "***", translations
+            translations = self.getTranslations('functional_entity', am.functional_entity_id, am)
 
             section = {'name': am.Name, 'items': [], 'visibleDescription': am.VisibleDescription or '', '_id': am.Id, 'sections': [],
-                'number': am.Number#, 'defaultLanguage': 'en-EN'
+                'number': am.Number, 'translations': translations
             }
 
             for item in self.db.virtual_device.find({"functional_entity_id": entry['functional_entity_id']}, {'virtual_device_id': 1, '_id': 0}).sort([('catalog_entry_id', 1)]):
+                im = CatalogItemMapper(item)
+
+                translations = self.getTranslations('virtual_device', item['virtual_device_id'], im)
                 vd = Device(item['virtual_device_id'])
                 self.devices[vd.productId] = vd
                 section['items'].append({"Id": vd.catalogItemId, "Name": vd.virtual_device_name, "Number": vd.virtual_device_number,
                     "VisibleDescription": vd.virtual_device_description or '', "ProductRefId": vd.productId,
-                    "Hardware2ProgramRefId": vd.hardwareProductId, # "DefaultLanguage": "en-US"
+                    "Hardware2ProgramRefId": vd.hardwareProductId, 'translations': translations
                 })
             sections.append(section)
             self.getCatalogSections(entry, entry['functional_entity_id'], numbers, level, section)
@@ -414,7 +431,6 @@ class CatalogBuilder(GenericBuilder):
         level -= 1
 
     def getHardware(self, devices):
-        #     entry_width_in_millimeters = '144.00'
         print """<?xml version="1.0" encoding="utf-8"?>
 <KNX xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" CreatedBy="knxconv" ToolVersion="4.0.1837.35879" xmlns="http://knx.org/xml/project/11">
   <ManufacturerData>
@@ -422,13 +438,6 @@ class CatalogBuilder(GenericBuilder):
       <Hardware>"""
         for dev in sorted(devices.values(), key = lambda x: x.catalog_entry_id): # virtual_device_id
             print '         <Hardware Id="%s" Name="%s" SerialNumber="%s" VersionNumber="%s" BusCurrent="%s" HasIndividualAddress="true" HasApplicationProgram="%s" NoDownloadWithoutPlugin="true"' % (dev.hardwareId, dev.hardwareProduct.product_name, dev.hardwareProduct.product_serial_number, dev.hardwareProduct.product_version_number, dev.hardwareProduct.bus_current, "true" if dev.program_id else "*false")
-            #print
-            # M-0001_H-hp.5F00063-1-O0002 => viele Apps.
-            # M-0001_H-hp.5F00099-1-O0018 => viele Produkte.
-
-            #s_regExH2PWithPei = new Regex("(?<manufid>M-[0-9a-fA-F]{4})(?<hp>_H-.*_HP-)(?<prefix>[0-9a-fA-F]{4}-[0-9a-fA-F]{2}-)(?<sign>[0-9a-fA-F]{4})(?<suffix>-O[0-9a-fA-F]{4})?(?<seprator>-)?(?<prefix2>[0-9a-fA-F]{4}-[0-9a-fA-F]{2}-)?(?<sign2>[0-9a-fA-F]{4})?(?<suffix2>-O[0-9a-fA-F]{4})?", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.CultureInvariant);
-            if dev.hardwareId == "M-0001_H-hp.5F00099-1-O0018":
-                print
             products = list(self.db.catalog_entry.find({"product_id": dev.catalogEntry.product_id}, sort = [("catalog_entry_id", mongo.ASCENDING)]))
             if products:
                 print "            <Products>"
@@ -450,7 +459,6 @@ class CatalogBuilder(GenericBuilder):
                     programVersion = dt['program_version']
                     programNumber = "M-%04X_H-%s-%u_HP-%04X-%02X" % (product['manufacturer_id'], knx_escape.escape(dev.hardwareProduct.product_serial_number), dev.hardwareProduct.product_version_number, deviceType, int(programVersion))
                     programNumber = "%s-%s" % (programNumber, hashlib.sha1(programNumber).hexdigest()[-4 : ].upper())
-                    #M-0001_H-hp.5F00181-1_HP-8015-02-8A8F
                     print '<Hardware2Program %s />' % (programNumber)
                 if p2p['registration_year']:
                     year = p2p['registration_year']
@@ -470,7 +478,7 @@ def convert(filename):
     cb.run()
     #cb.getHardware(cb.devices)
 
-#convert('ETS3_ALL_vd3') # n562_11_vd5
+#convert('n562_11_vd5')
 #sys.exit()
 
 class ApplicationBuilder(GenericBuilder):
