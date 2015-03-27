@@ -334,7 +334,6 @@ class GenericBuilder(object):
     def __init__(self, conn, dbName):
         self.conn = conn
         self.db = conn[dbName]
-        self.tableMeta = TableInformation(self.db)
         Table.tableMeta = TableInformation(self.db)
 
     def getTranslations(self, collection, entityId, mapper = None):
@@ -408,7 +407,6 @@ class CatalogBuilder(GenericBuilder):
             numbers.append(am.Number)
 
             translations = self.getTranslations('functional_entity', am.functional_entity_id, am)
-
             section = {'name': am.Name, 'items': [], 'visibleDescription': am.VisibleDescription or '', '_id': am.Id, 'sections': [],
                 'number': am.Number, 'translations': translations
             }
