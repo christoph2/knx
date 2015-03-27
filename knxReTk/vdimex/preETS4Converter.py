@@ -252,9 +252,9 @@ class Device(Table):
 
     @property
     def hardwareId(self):
-        hardwareId = "M-%04X_H-%s-%X" % (self.catalogEntry.manufacturer_id,
+        hardwareId = "M-%04X_H-%s-%u" % (self.hardwareProduct.manufacturer_id,
             (knx_escape.escape(self.hardwareProduct.product_serial_number)),
-            self.virtual_device_number, # product_version_number???
+            self.hardwareProduct.product_version_number
         )
         if self.hardwareProduct.original_manufacturer_id:
             hardwareId = "%s-O%04X" % (hardwareId, self.hardwareProduct.original_manufacturer_id)
