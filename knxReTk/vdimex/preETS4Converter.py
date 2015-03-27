@@ -340,7 +340,7 @@ class GenericBuilder(object):
         resultList = []
         translations = list(self.db.text_attribute.find({'entity_id': entityId}, ).sort([('language_id', 1), ('column_id', 1)]))
         for translation in translations:
-            columnName = self.tableMeta.getColumnNameByNumber(collection, translation['column_id'])
+            columnName = Table.tableMeta.getColumnNameByNumber(collection, translation['column_id'])
             if mapper:
                 tcn = mapper.attribute_map_inverse.get(columnName)
                 if tcn:

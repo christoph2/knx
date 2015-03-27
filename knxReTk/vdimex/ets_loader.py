@@ -68,18 +68,22 @@ class MongoLoader(CatalogueReverser):
     def onHeader(self, headerInfo):
         self.headerInfo = headerInfo
 
-        defaultLanguage = self.database.ete_language.find_one({"database_language": 1}, {"language_id": 1, '_id': 0}).get('language_id', 1033)
-        defaultLanguageCode = getLocalCode(defaultLanguage)
-
-        self.database.meta.update({"_id": headerInfo["hashValue"]}, {"_id": headerInfo["hashValue"], "tables": [],
-            "defaultLanguage": defaultLanguageCode,
-            "languages": [getLocalCode(lang['language_id']) for lang in list(self.database.ete_language.find({}, {'_id': 0, 'language_id': 1}))]},
-            safe = True, upsert = True
+        self.database.meta.update({"_id": headerInfo["hashValue"]}, {"_id": headerInfo["hashValue"], "tables": []},
+                                  safe = True, upsert = True
         )
-
         print "Importing tables: ",
 
     def onFinished(self):
+        defaultLanguage = self.database.ete_language.find_one({"database_language": 1}, {"language_id": 1, '_id': 0}).get('language_id', 1033)
+        defaultLanguageCode = getLocalCode(defaultLanguage)
+        self.database.meta.update({"_id": self.headerInfo["hashValue"]}, {
+                "$set": {
+                    "defaultLanguage": defaultLanguageCode,
+                    "languages": [getLocalCode(lang['language_id']) for lang in list(self.database.ete_language.find({}, {'_id': 0, 'language_id': 1}))]
+                    }
+            },
+            safe = True
+        )
         print
         print "-" * 79
         print "Finished Loading."

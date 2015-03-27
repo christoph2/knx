@@ -158,7 +158,7 @@ def processXML(filename):
     mongoClient = getMongoClient()
 
     _, fname = os.path.split(filename)
-    db = mongoClient[fname.replace('.', '-')]
+    db = mongoClient[fname.replace('.', '_')]
     db["catalog"].drop()
     db["application"].drop()
     db["hardware"].drop()
