@@ -211,3 +211,4 @@ def getLocalCode(locale):
         return "%s-%s" % (l.lower(), r.upper())
     else:
         return result
+

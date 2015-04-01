@@ -52,6 +52,9 @@ class XMLHandler(ContentHandler):
     def startElement(self, name, attrs):
         attrs = dict(attrs)
 
+        if ':' in name:
+            namespace, name = name.split(':')
+
         tempAttrs = dict()
         while attrs:
             k, v = attrs.popitem()
@@ -59,6 +62,8 @@ class XMLHandler(ContentHandler):
         attrs = tempAttrs
 
         self.currentElement = attrs
+        #self.currentElement['textContent'] = ''
+        self.textContent = ''
 
         self.level += 1
         self.tags.append(name)
@@ -78,12 +83,17 @@ class XMLHandler(ContentHandler):
     def characters(self, ch):
         text = ch.strip()
         if text:
-            self.currentElement['textContent'] = text
+            #self.currentElement['textContent'] += text
+            self.textContent += text
 
     def endElement(self, name):
+        if ':' in name:
+            namespace, name = name.split(':')
         callback = "on%sEnd" % name
         if hasattr(self, callback):
             getattr(self, callback)(name)
+        #self.currentElement['textContent'] = ''
+        self.textContent = ''
         self.level -= 1
         self.tags.pop()
 
