@@ -139,6 +139,7 @@ class CatalogMixin(BaseMixin):
             self.items = []
         else:
             self.result['sections'].append(self.currentSection)
+            self.currentSection = None
 
     def onCatalogItemStart(self, name, attrs):
         attrs = self.convertAttributes(attrs)
@@ -183,6 +184,7 @@ class ApplicationMixin(BaseMixin):
         self.currentSegment = None
         self.currentApplication = None
         self.currentParameterType = None
+        self.currentParameterRefContainer = []
         self.currentFixup = None
         self.result = self.manufacturers
 
@@ -191,11 +193,8 @@ class ApplicationMixin(BaseMixin):
             self.currentManufacturer = {'_id': attrs['refId'], 'applicationPrograms': []}
             self.manufacturers[attrs['refId']] = self.currentManufacturer
         else:
-            #print "HMMM", attrs, self.manufacturers
-            #self.manufacturer[sattrs['refId']]
             if not self.currentManufacturer:
                 self.currentManufacturer = self.manufacturers[attrs['refId']]
-        #print "MANUFACTURER: ", self.currentManufacturer
 
     def onApplicationProgramStart(self, name, attrs):
         attrs = self.convertAttributes(attrs)
@@ -213,16 +212,13 @@ class ApplicationMixin(BaseMixin):
         self.convert(attrs, 'downloadInfoIncomplete', toBoolean)
         self.convert(attrs, 'createdFromLegacySchemaVersion', toBoolean)
         self.convert(attrs, 'broken', toBoolean)
-        attrs['static'] = {'code': {"segments": []}, 'parameterTypes': [], 'parameters': [],
+        attrs['static'] = {'code': {"segments": []}, 'parameterTypes': [], 'parameters': [], 'parameterRefs': [],
             'loadProcedures': [],"options": None, 'fixups': [], 'addressTable': {}, 'associationTable': {},
-            'extension': {}, 'comObjectTable': {'comObjects': []}
+            'extensions': [], 'comObjectTable': {'comObjects': []}, 'comObjectRefs': []
         }
-        #attrs['static']['code'] = {"segments": []}
-        attrs['dynamic'] = []
-        #self.convert(attrs, '', toBoolean)
+        attrs['dynamic'] = {'channels': []}
         self.currentApplication = attrs
         self.currentManufacturer['applicationPrograms'].append(attrs)
-        #print "App: ", attrs
 
     def onOptionsStart(self, name, attrs):
         attrs = self.convertAttributes(attrs)
@@ -263,6 +259,17 @@ class ApplicationMixin(BaseMixin):
         self.convert(attrs, 'maxEntries', int)
         self.currentApplication['static']['associationTable'] = attrs
 
+    def onExtensionStart(self, name, attrs):
+        attrs = self.convertAttributes(attrs)
+        self.convert(attrs, 'requiresExternalSoftware', toBoolean)
+        attrs['baggages'] = []
+        self.currentExtension = attrs
+        self.currentApplication['static']['extensions'].append(attrs)
+
+    def onBaggageStart(self, name, attrs):
+        attrs = self.convertAttributes(attrs)
+        self.currentExtension['baggages'].append(attrs)
+
     def onFixupStart(self, name, attrs):
         attrs = self.convertAttributes(attrs)
         attrs['offsets'] = []
@@ -270,7 +277,7 @@ class ApplicationMixin(BaseMixin):
         self.currentApplication['static']['fixups'].append(self.currentFixup)
 
     def onOffsetEnd(self, name):
-        self.currentFixup['offsets'].append(int(self.currentElement['textContent']))
+        self.currentFixup['offsets'].append(int(self.textContent))
 
     def onAbsoluteSegmentStart(self, name, attrs):
         attrs = self.convertAttributes(attrs)
@@ -295,10 +302,10 @@ class ApplicationMixin(BaseMixin):
         self.currentApplication['static']['code']["segments"].append(attrs)
 
     def onDataEnd(self, name):
-        self.currentSegment['data'] = self.currentElement['textContent']
+        self.currentSegment['data'] = self.textContent
 
     def onMaskEnd(self, name):
-        self.currentSegment['mask'] = self.currentElement['textContent']
+        self.currentSegment['mask'] = self.textContent
 
     def onComObjectTableStart(self, name, attrs):
         attrs = self.convertAttributes(attrs)
@@ -379,22 +386,69 @@ class ApplicationMixin(BaseMixin):
         self.addLoadControl(attrs, 'disconnect')
 
     def onLdCtrlComparePropStart(self, name, attrs):
-        self.addLoadControl(attrs, 'ldCtrlCompareProp', {"objIdx": int, "propId": int})
+        self.addLoadControl(attrs, 'compareProp', {"objIdx": int, "propId": int})
 
     def onLdCtrlTaskPtrStart(self, name, attrs):
-        self.addLoadControl(attrs, 'ldCtrlTaskPtr', {'lsmIdx': int, 'initPtr': int, 'savePtr': int, 'serialPtr': int})
+        self.addLoadControl(attrs, 'taskPtr', {'lsmIdx': int, 'initPtr': int, 'savePtr': int, 'serialPtr': int})
 
     def onLdCtrlTaskCtrl2Start(self, name, attrs):
-        self.addLoadControl(attrs, 'ldCtrlTaskCtrl2', {'lsmIdx': int, 'callback': int, 'address': int, 'seg0': int, 'seg1': int})
+        self.addLoadControl(attrs, 'taskCtrl2', {'lsmIdx': int, 'callback': int, 'address': int, 'seg0': int, 'seg1': int})
 
     def onLdCtrlTaskCtrl1Start(self, name, attrs):
-        self.addLoadControl(attrs, 'ldCtrlTaskCtrl1', {'lsmIdx': int, 'address': int, 'count': int})
-        """
-         (9, u'LdCtrlDelay'),
-         (9, u'LdCtrlLoadImageProp'),
-         (9, u'LdCtrlRelSegment'),
-         (9, u'LdCtrlWriteMem'),
-         (9, u'LdCtrlWriteProp'),
-         (9, u'LdCtrlWriteRelMem'),
-        """
+        self.addLoadControl(attrs, 'taskCtrl1', {'lsmIdx': int, 'address': int, 'count': int})
+
+    def onLdCtrlDelayStart(self, name, attrs):
+        self.addLoadControl(attrs, 'delay', {'milliSeconds': int})
+
+    def onLdCtrlSetControlVariableStart(self, name, attrs):
+        self.addLoadControl(attrs, 'setControlVariable', {'value': bool})
+
+    def onLdCtrlLoadImagePropStart(self, name, attrs):
+        self.addLoadControl(attrs, 'loadImageProp', {'objIdx': int, 'objType': int, 'occurence': int,
+            'propId': int, 'count': int, 'startElement': int,}
+        )
+
+    def onLdCtrlRelSegmentStart(self, name, attrs):
+        self.addLoadControl(attrs, 'relSegment', {'lsmIdx': int, 'objType': int, 'occurence': int,
+            'size': int, 'mode': int, 'fill': int }
+        )
+
+    def onLdCtrlWriteMemStart(self, name, attrs):
+        self.addLoadControl(attrs, 'writeMem', {'address': int, 'size': int, 'verify': bool, })
+
+    def onLdCtrlWritePropStart(self, name, attrs):
+        self.addLoadControl(attrs, 'writeProp', {'objIdx': int, 'objType': int, 'occurence': int,
+            'propId': int, 'startElement': int}
+        )
+
+    def onLdCtrlWriteRelMemStart(self, name, attrs):
+        self.addLoadControl(attrs, 'writeRelMem', {'objIdx': int, 'offset': int, 'size': int,
+            'verify': bool})
+
+    def onParameterStart(self, name, attrs):
+        attrs = self.convertAttributes(attrs)
+        self.currentApplication['static']['parameters'].append(attrs)
+
+    def onParameterRefStart(self, name, attrs):
+        attrs = self.convertAttributes(attrs)
+        self.convert(attrs, 'displayOrder', int)
+        self.currentApplication['static']['parameterRefs'].append(attrs)
+
+    def onComObjectRefStart(self, name, attrs):
+        attrs = self.convertAttributes(attrs)
+        self.currentApplication['static']['comObjectRefs'].append(attrs)
+
+    def onChannelStart(self, name, attrs):
+        attrs = self.convertAttributes(attrs)
+        self.convert(attrs, 'number', int)
+        #print "Channel:", attrs
+        #self.currentParameterRefContainer.append(attrs)
+        self.currentApplication['dynamic']['channels'].append(copy(attrs))
+
+    def onChannelEnd(self, name):
+        pass
+        #self.currentParameterRefContainer.pop()
+
+    #def onParameterBlockStart(self, name, attrs):
+    #    attrs = self.convertAttributes(attrs)
 
