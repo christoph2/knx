@@ -46,10 +46,12 @@ from tornado.options import define, options
 from knxReTk.utilz.knx_escape import escape, unescape
 
 define("port", default = 8086, help = "run on the given port", type = int)
+
 cookieSecret = lambda: base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
 unescaper = lambda x: unescape(urllib.unquote(x))
 escaper = lambda x: urllib.quote(escape(x))
 expiration = lambda minutes: datetime.datetime.utcnow() + datetime.timedelta(minutes = minutes)
+
 
 class Catalog(object):
 
@@ -68,6 +70,14 @@ class Catalog(object):
     def items(self, path):
         return self._items.get(path, [])
 
+    def _cleanupItems(self, items):
+        result = []
+        for item in items:
+            item.pop('_id')
+            item.pop('defaultLanguage')
+            result.append(item)
+        return result
+
     def getSection(self, entry, level = 0, path = []):
         result = []
         level += 1
@@ -76,7 +86,7 @@ class Catalog(object):
             newSection = {'name': section['name'], 'number': section['number'], 'visibleDescription': visibleDescription , 'sections': []}
             path.append(escape(section['number']).encode('utf-8'))
             pathStr = urllib.quote('/'.join(path))
-            self._items[pathStr] = section['items']
+            self._items[pathStr] = self._cleanupItems(section['items'])
             newSection['path'] = pathStr
             result.append(newSection)                
             subSections = self.getSection(section, level, path)
@@ -153,16 +163,10 @@ class CatalogHandler(BaseHandler):
     
     def get(self, name):
         name = unescaper(name)
-        cookie = self.get_secure_cookie("count")
-        count = int(cookie) + 1 if cookie else 1
-        print "Count:", count
-        self.set_secure_cookie("count", str(count)) # httponly=True, secure=True)
-        print "CATALOG Requested:", name
-
         catalog = self.catalog(name)
-        if not catalog: #dbExists(self.conn, name):
-            #self.set_status(404)
-            self.send_error(404)
+        if not catalog:
+            self.set_status(404)
+            #self.send_error(404)
         else:
             #catalog = Catalog(self.conn, name)
             self.write(json.dumps(catalog.sections), 'application/json')
@@ -172,11 +176,10 @@ class CatalogItemHandler(BaseHandler):
 
     def get(self, name, item):
         name = unescaper(name)
-        #item = unescaper(item)
-        print "CatalogItemHandler:", name, item
         catalog = self.catalog(name)
         if not catalog:
-            self.send_error(404)
+            #self.send_error(404)
+            self.set_status(404)
         else:
             self.write(json.dumps(catalog.items(item)), 'application/json')        
 
@@ -184,7 +187,6 @@ class CatalogItemHandler(BaseHandler):
 class CatalogListingHandler(BaseHandler):
     
     def get(self):
-        print self.request
         self.write(json.dumps(catalogDBs(self.conn)), 'application/json')
 
 
