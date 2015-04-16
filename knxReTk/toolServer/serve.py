@@ -45,6 +45,9 @@ import json
 from tornado.options import define, options
 from knxReTk.utilz.knx_escape import escape, unescape
 
+SERVER_VERSION = "1.0"
+SERVER_NAME = "KNXToolServer"
+
 define("port", default = 8086, help = "run on the given port", type = int)
 
 cookieSecret = lambda: base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
@@ -73,8 +76,10 @@ class Catalog(object):
     def _cleanupItems(self, items):
         result = []
         for item in items:
-            item.pop('_id')
-            item.pop('defaultLanguage')
+            if '_id' in item:
+                item.pop('_id')
+            if 'defaultLanguage' in item:
+                item.pop('defaultLanguage')
             result.append(item)
         return result
 
@@ -143,6 +148,9 @@ class BaseHandler(tornado.web.RequestHandler):
     
     def initialize(self, conn):
         self.conn = conn
+
+    def set_default_headers(self):
+        self.set_header('Server', '%s/%s' % (SERVER_NAME, SERVER_VERSION))
 
     def write(self, chunk, contentType = None):
         acceptedEncodings = self.request.headers.get('accept-encoding', '')
