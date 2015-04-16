@@ -428,27 +428,34 @@ class CatalogBuilder(GenericBuilder):
             numbers.pop()
         level -= 1
 
+    def getProductDescriptions(self, catalogEntryId):
+        #db.getCollection('product_description').find({"product_description_text": {$ne: null}}, {"product_description_text": 1}).sort({"catalog_entry_id": -1, "language_id": 1})
+        descriptions = list(self.db.product_description.find({"catalog_entry_id": catalogEntryId}).sort([("language_id", 1)]))
+        result = {}
+        for key, description in itertools.groupby(descriptions, lambda e: e["language_id"]):
+            print "* getProductDescriptions:", key, description["product_description_text"]
+            result[key] = list(description)
+        return result
+
     def getHardware(self, devices):
-        print """<?xml version="1.0" encoding="utf-8"?>
-<KNX xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" CreatedBy="knxconv" ToolVersion="4.0.1837.35879" xmlns="http://knx.org/xml/project/11">
-  <ManufacturerData>
-    <Manufacturer RefId="M-0002">
-      <Hardware>"""
         for dev in sorted(devices.values(), key = lambda x: x.catalog_entry_id): # virtual_device_id
-            print '         <Hardware Id="%s" Name="%s" SerialNumber="%s" VersionNumber="%s" BusCurrent="%s" HasIndividualAddress="true" HasApplicationProgram="%s" NoDownloadWithoutPlugin="true"' % (dev.hardwareId, dev.hardwareProduct.product_name, dev.hardwareProduct.product_serial_number, dev.hardwareProduct.product_version_number, dev.hardwareProduct.bus_current, "true" if dev.program_id else "*false")
+            hardware = dict(_id = dev.hardwareId, name = dev.hardwareProduct.product_name,
+                serialNumber = dev.hardwareProduct.product_serial_number, versionNumber = dev.hardwareProduct.product_version_number,
+                busCurrent = dev.hardwareProduct.bus_current, hasApplicationProgram = True if dev.program_id else False,
+                hardware2Programs = [], products = [],
+            )
+            if dev.hardwareProduct.original_manufacturer_id:
+                hardware['originalManufacturer'] = "M-%04X" % dev.hardwareProduct.original_manufacturer_id
             products = list(self.db.catalog_entry.find({"product_id": dev.catalogEntry.product_id}, sort = [("catalog_entry_id", mongo.ASCENDING)]))
-            if products:
-                print "            <Products>"
             for product in products:
-                description = self.db.product_description.find_one({"catalog_entry_id": product['catalog_entry_id']})   # je Sprache!?
+
                 productId = "%s2_P-%s" % (dev.hardwareId, knx_escape.escape(product['order_number']))
-                if description:
-                    print '               <Product Id="%s" Text="%s" OrderNumber="%s" IsRailMounted="%s"  WidthInMillimeter="%s" VisibleDescription="%s" DefaultLanguage="en-US" Hash="">' % (productId, product['entry_name'], product['order_number'], "true" if product['din_flag'] else "false", product['entry_width_in_millimeters'], description['product_description_text'])
-                else:
-                    print '               <Product Id="%s" Text="%s" OrderNumber="%s" IsRailMounted="%s"  WidthInMillimeter="%s" DefaultLanguage="en-US" Hash="">' % (productId, product['entry_name'], product['order_number'], "true" if product['din_flag'] else "false", product['entry_width_in_millimeters'],)
-                print "               </Product>"
-            if products:
-                print "            </Products>"
+
+                productDict = dict(_id = productId, text = product['entry_name'], orderNumber = product['order_number'],
+                    isRailMounted = True if product['din_flag'] else False, widthInMillimeter = product['entry_width_in_millimeters'],
+                    translations = self.getTranslations('catalog_entry', product['catalog_entry_id'])
+                 )
+                hardware['products'].append(productDict)
             prodProg = list(self.db.product_to_program.find({"product_id": dev.hardwareProduct.product_id}))
             for p2p in prodProg:
                 dt = self.db.application_program.find_one({'program_id': p2p['program_id']}, {'device_type': 1, 'program_version': 1, '_id': 0})
@@ -464,17 +471,32 @@ class CatalogBuilder(GenericBuilder):
                         year += 1900
                     if p2p['prod2prog_status_code'] in (10, 20):
                         print "        *** Reg-Number: %u/%u" % (year, p2p['registration_number'])
+            self.db.hardware.update({"_id": hardware['_id']}, hardware, upsert = True, safe = True)
 
-        print """         </Hardware>
-      </Manufacturer>
-  </ManufacturerData>
-</KNX>"""
+
+    def ptree(self, programId, parentId = None, level = 0):
+        level += 1
+        for param in list(self.db.parameter.find({'program_id': programId, 'par_parameter_id': parentId}, sort = [
+            #('parameter_address', mongo.ASCENDING), ('parameter_number', mongo.ASCENDING) ])):
+            #('parameter_display_order', mongo.ASCENDING)
+                ('address_space', mongo.ASCENDING), ('parameter_display_order', mongo.ASCENDING) # ('parameter_id', mongo.ASCENDING)
+            ])):  # parameter_numbe
+            print "  " * level,
+            comObjs = list(self.db.communication_object.find({'parameter_id': param['parameter_id']}))
+            #print comObjs
+            # object_function object_name  object_unique_number
+            print hex(param['parameter_address'] or 0), param['parameter_name'], param['parameter_description'], param['parameter_number'], param['parameter_display_order']
+            self.ptree(programId, param['parameter_id'], level)
+        level -= 1
+
 
 def convert(filename):
     conn = mongo.Connection()
     cb = CatalogBuilder(conn, filename)
     cb.run()
-    #cb.getHardware(cb.devices)
+    cb.getHardware(cb.devices)
+    for prog in cb.db.application_program.find():
+        cb.ptree(prog['program_id'])
 
 #convert('n562_11_vd5')
 #sys.exit()
