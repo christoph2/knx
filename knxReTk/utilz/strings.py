@@ -4,7 +4,7 @@
 __copyright__ = """
    Konnex / EIB Reverserz Toolkit
 
-   (C) 2001-2015 by Christoph Schueler <cpu12.gems@googlemail.com>
+   (C) 2001-2016 by Christoph Schueler <cpu12.gems@googlemail.com>
 
    All Rights Reserved
 
@@ -31,6 +31,7 @@ __version__ = '0.9'
 import itertools
 import re
 import string
+import sys
 import types
 
 IDENTITY_TRANSFORMATION = string.maketrans('', '')
@@ -117,3 +118,16 @@ def reformat(text, leftMargin = 1, rightMargin = 80):
         resultLines.append(line.rstrip())
     return '\n'.join(resultLines)
 
+if sys.version_info.major == 3:
+    from io import BytesIO as StringIO
+else:
+    try:
+        from cStringIO import StringIO
+    except ImportError:
+        from StringIO import StringIO
+
+
+def createStringBuffer(*args):
+    """Create a string with file-like behaviour (StringIO on Python 2.x).
+    """
+    return StringIO(*args)
