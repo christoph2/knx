@@ -4,7 +4,7 @@
 __copyright__ = """
    Konnex / EIB Reverserz Toolkit
 
-   (C) 2001-2014 by Christoph Schueler <cpu12.gems@googlemail.com>
+   (C) 2001-2016 by Christoph Schueler <cpu12.gems@googlemail.com>
 
    All Rights Reserved
 
@@ -29,35 +29,63 @@ __version__ = '0.1.0'
 
 import logging
 
-LOGGER_NAME = 'knxReTk'
-DEPHAULT_LEVEL = logging.NOTSET
-PHORMAT = "%(asctime)s:%(filename)s:%(lineno)s [%(levelname)s]: %(message)s"
 
-try:
-    logger
-except NameError:
-    # Create logger if it doesn't exist.
-    logger = logging.getLogger(LOGGER_NAME)
-    logger.setLevel(DEPHAULT_LEVEL)
-    handler = logging.StreamHandler()
-    handler.setLevel(DEPHAULT_LEVEL)
-    formatter = logging.Formatter(PHORMAT)
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+class Logger(object):
 
-def defaultLevel():
-    logger.setLevel(logging.WARNING)
+     LOGGER_BASE_NAME = 'knxReTk'
+     FORMAT = "[%(levelname)s (%(name)s)]: %(message)s"
 
-def verboseLevel():
-    logger.setLevel(logging.DEBUG)
+     def __init__(self, level = logging.WARN):
+         self.logger = logging.getLogger("{0}".format(self.LOGGER_BASE_NAME))
+         self.logger.setLevel(level)
+         handler = logging.StreamHandler()
+         handler.setLevel(level)
+         formatter = logging.Formatter(self.FORMAT)
+         handler.setFormatter(formatter)
+         self.logger.addHandler(handler)
+         self.lastMessage = None
+         self.lastSeverity = None
 
-def silentLevel():
-    logger.setLevel(logging.CRITICAL)
+     def getLastError(self):
+         result = (self.lastSeverity, self.lastMessage)
+         self.lastSeverity = self.lastMessage = None
+         return result
 
-def alsoLogToFile(fname):
-    pass
+     def log(self, message, level):
+         self.lastSeverity = level
+         self.lastMessage = message
+         self.logger.log(level, "{0}".format(message))
 
-def doNotLogToFile(fname):
-    pass
+     def info(self, message):
+         self.log(message, logging.INFO)
 
+     def warn(self, message):
+         self.log(message, logging.WARN)
+
+     def error(self, message):
+         self.log(message, logging.ERROR)
+
+     def debug(self, message):
+         self.log(message, logging.DEBUG)
+
+     def critical(self, message):
+         self.log(message, logging.CRITICAL)
+
+     def verbose(self):
+         self.logger.setLevel(logging.DEBUG)
+
+     def silent(self):
+         self.logger.setLevel(logging.CRITICAL)
+
+     def setLevel(self, level):
+         LEVEL_MAP = {
+             "INFO": logging.INFO,
+             "WARN": logging.WARN,
+             "DEBUG": logging.DEBUG,
+             "ERROR": logging.ERROR,
+             "CRITICAL": logging.CRITICAL,
+         }
+         if isinstance(level, str):
+             level = LEVEL_MAP.get(level.upper(), logging.WARN)
+         self.logger.setLevel(level)
 
