@@ -151,6 +151,11 @@ NAK                 = 0x0c
 BUSY                = 0xc0
 ACK                 = 0xcc
 
+
+ACK_NACK            = 4
+ACK_BUSY            = 2
+ACK_ADDRESSED       = 1
+
 L_Poll_Data_ind         = 0xf0
 
 
@@ -190,7 +195,6 @@ AVAILABLE_SERVICES = {
     ACK                     : VARIANT_TPUART_1 | VARIANT_TPUART_2,
     L_Poll_Data_ind         : VARIANT_TPUART_1 | VARIANT_TPUART_2 | VARIANT_NCN_5120,
 }
-
 
 SERVICE_NAMES = {
     # TO
@@ -449,6 +453,7 @@ class ReceiptionCommand(BaseProcessor):
     def __init__(self, parent):
         super(ReceiptionCommand, self).__init__(parent)
         self.frame = []
+        self.previousFrame = []
         self.bytecount = self.parent.expectation.bytecount
         self.repeated = False
         self.repetitionCounter = 0
@@ -461,7 +466,8 @@ class ReceiptionCommand(BaseProcessor):
         klass = (octet & 0x0c) >> 2
         self.idx = 1
         self.action = self.consecutive
-        self.parent.port.write(0x11)
+        #self.parent.port.write(0x11)
+        #self.parent.ack(ACK_ADDRESSED)
 
     def consecutive(self, octet):
         self.frame.append(octet)
@@ -477,7 +483,13 @@ class ReceiptionCommand(BaseProcessor):
         self.frame.append(octet)
         mb = MessageBuffer(self.frame)
         mb.service = IMI.L_DATA_IND
-        self.parent.dataLinkLayer.post(mb)
+        if self.frame[1 : -1] != self.previousFrame[1:-1]:   # TODO: check repeat! self.frame[0]
+            # Don't post repeated frames.
+            print "L_DATA_IND:", self.frame
+            self.parent.dataLinkLayer.post(mb)
+            self.previousFrame = self.frame
+        else:
+            print "CTRL:", hex(self.frame[0])
         self.frame = []
         self._done = True
         self.action = self.first
@@ -610,6 +622,7 @@ class TPUARTServer(Thread):
         self.timer.cancel()
 
     def internalCommandUnconfirmed(self, frame):
+        print "internalCommandUnconfirmed: ", frame
         return self.internalCommand(frame, IDLE)
 
     def internalCommandConfirmed(self, frame):
@@ -639,6 +652,9 @@ class TPUARTServer(Thread):
     def reset(self):
         self.expect(U_Reset_ind, 0xff, 1)
         self.internalCommandConfirmed(U_Reset_req)
+
+    def ack(self, info):
+        self.internalCommandUnconfirmed(U_AckInformation_req | (info & 0x07))
 
     def getState(self):
         self.expect(U_State_ind, 0xff, 1)
