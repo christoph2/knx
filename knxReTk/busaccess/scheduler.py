@@ -56,6 +56,7 @@ class Scheduler(object):
         #self.commServer.buisyWait()
 
     def shutdown(self):
+        self.applicationManagement.shutdownAll()
         Thread.quitAll()
 
 def scanner():
