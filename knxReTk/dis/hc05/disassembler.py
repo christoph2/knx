@@ -406,9 +406,7 @@ def main():
 ##    print "=" * 80
 ##
 
-from objutils.SRecords import Reader
-from objutils.Segment import joinSegments
-from cStringIO import StringIO
+from objutils import loads
 
 import pkgutil
 
@@ -437,9 +435,9 @@ S11301F0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000A
 S5030010EC
 """
 
-rd = Reader(StringIO(S19))
-data = rd.read()
+data = loads("srec", S19)
 
+from cStringIO import StringIO
 
 class ROMDisassembler(object):
 
