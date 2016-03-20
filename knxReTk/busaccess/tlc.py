@@ -229,7 +229,6 @@ class StateMachine(SingletonBase):
     def __call__(self, event):
         print "State: %s - Event: %s" % (StateType.toString(self._state), EventType.toString(event), ),
 
-        #
         eventHandler = self.EVENT_HANDLER[event]
         entry = StateMachine.STATE_TABLE[eventHandler(self)]
         action, nextState = entry[self.state]
@@ -308,8 +307,8 @@ class StateMachine(SingletonBase):
         frame = self.message.asStandardFrame()
         frame.seqNo = self.sequenceNumberSend
         frame.dest = self.connectionAddress
-        self.message.service = N_DATA_INDIVIDUAL_REQ    # T_DATA_CONNECTED_REQ
-        self.parent.post(self.message)
+        self.message.service = IMI.N_DATA_INDIVIDUAL_REQ    # T_DATA_CONNECTED_REQ
+        self.layer.post(self.message)
         self.repetitionCount = 0
         self.startAcknowledgeTimeoutTimer()
         self.restartConnectionTimeoutTimer()
@@ -542,7 +541,9 @@ class TransportLayerConnected(Layer):
         self.stateMachine.layer = self
 
     def n_DataIndividual_Ind(self, message):
-        print "TransportLayerConnected: n_DataIndividual_Ind"
+        self.stateMachine.sourceAddress = message.asStandardFrame().source
+
+        #print "TransportLayerConnected: n_DataIndividual_Ind", message
         frame = message.asStandardFrame()
         tpci = frame.tpci
         tpciMasked = (frame.tpci & 0xc0)
@@ -551,16 +552,15 @@ class TransportLayerConnected(Layer):
             self.post(message)
         elif tpciMasked == TPCI_NDT:    # Numbered Data (T_DATA_CONNECTED_REQ_PDU, 1:1-Connection-Oriented).
             self.sequenceNumberOfPDU = frame.seqNo
-            #KnxTlc_StateMachine(KNX_TLC_EVENT_DATA_CONNECTED_IND);
+            self.stateMachine(EventType.EVENT_DATA_CONNECTED_IND)
             frame.service = IMI.T_DATA_CONNECTED_IND
             self.post(message)
         elif tpciMasked == TPCI_UCD:    # Unnumbered Control. (CONNECT|DISCONNECT).
-            print "    CONN/DIS!: 0x%02x" % frame.tpci
             if tpci == TPCI_CONNECT_REQ_PDU:        # T_CONNECT_IND.
-                #KnxTlc_StateMachine(KNX_TLC_EVENT_CONNECT_IND)
+                self.stateMachine(EventType.EVENT_CONNECT_IND)
                 pass
             elif tpci == TPCI_DISCONNECT_REQ_PDU:   # T_DISCONNECT_IND.
-                #KnxTlc_StateMachine(KNX_TLC_EVENT_DISCONNECT_IND)
+                self.stateMachine(EventType.EVENT_DISCONNECT_IND)
                 pass
             else:
                 assert False
@@ -568,18 +568,16 @@ class TransportLayerConnected(Layer):
             tpci &= 0xC3
             self.sequenceNumberOfPDU = frame.seqNo
             if tpci == TPCI_ACK_PDU:
-                # KnxTlc_StateMachine(KNX_TLC_EVENT_ACK_IND);
-                pass
+                self.stateMachine(EventType.EVENT_ACK_IND)
             elif tpci == TPCI_NAK_PDU:
-                # KnxTlc_StateMachine(KNX_TLC_EVENT_NAK_IND)
-                pass
+                self.stateMachine(EventType.EVENT_NAK_IND)
             else:
                 assert False
         else:
             assert False
 
     def n_DataIndividual_Con(self, message):
-        #print "TransportLayerConnected: n_DataIndividual_Con"
+        #print "TransportLayerConnected: n_DataIndividual_Con", message
         frame = message.asStandardFrame()
         self.stateMachine.message = message
         tpci = frame.tpci
@@ -591,7 +589,6 @@ class TransportLayerConnected(Layer):
             #KnxTlc_StateMachine(KNX_TLC_EVENT_DATA_CONNECTED_CON);
             self.stateMachine(EventType.EVENT_DATA_CONNECTED_CON)
         elif tpciMasked == TPCI_UCD:    # Unnumbered Control. (CONNECT|DISCONNECT).
-            print "    CONN/DIS!: 0x%02x" % frame.tpci
             if tpci == TPCI_CONNECT_REQ_PDU:        # T_CONNECT_CON.
                 #KnxTlc_StateMachine(KNX_TLC_EVENT_CONNECT_CON)
                 self.stateMachine(EventType.EVENT_CONNECT_CON)
@@ -624,7 +621,7 @@ class TransportLayerConnected(Layer):
         self.post(message)
 
     def connection_Req(self, tpci, event, source, dest):
-        print "TransportLayerConnected: connection_Req: 0x%x" % tpci
+        #print "TransportLayerConnected: connection_Req: 0x%x" % tpci
         message = MessageBuffer([0] * 7)
         message.service = IMI.N_DATA_INDIVIDUAL_REQ
         frame = message.asStandardFrame()
@@ -634,7 +631,6 @@ class TransportLayerConnected(Layer):
         self.stateMachine.connectionAddress = dest
         self.stateMachine.sourceAddress = source
         frame.dest = dest
-        # KnxTlc_StateMachine(event);
         self.stateMachine(event)
         self.post(message)
 
@@ -645,7 +641,7 @@ class TransportLayerConnected(Layer):
         self.connection_Req(TPCI_DISCONNECT_REQ_PDU, EventType.EVENT_DISCONNECT_REQ, source, dest)
 
     def t_DataConnected_Req(self, message):
-        print "TransportLayerConnected: n_DataConnected_Req"
+        print "TransportLayerConnected: t_DataConnected_Req"
         message.service = IMI.N_DATA_INDIVIDUAL_REQ
         frame = message.asStandardFrame()
         frame.tpci = TPCI_NDT
