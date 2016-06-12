@@ -397,7 +397,11 @@ class CatalogBuilder(GenericBuilder):
         print "done."
         return resultDict
 
-    def getCatalogSections(self, obj, key, numbers = [],level = 0, resultDict = {}):
+    def getCatalogSections(self, obj, key, numbers = None,level = 0, resultDict = None):
+        if numbers is None:
+            numbers = []
+        if resultDict is None:
+            resultDict = {}
         result = self.db.functional_entity.find({"fun_functional_entity_id": key}).sort([("functional_entity_id", mongo.ASCENDING,), ])
         level += 1
         sys.stdout.write('.')

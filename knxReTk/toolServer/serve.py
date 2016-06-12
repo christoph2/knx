@@ -83,7 +83,9 @@ class Catalog(object):
             result.append(item)
         return result
 
-    def getSection(self, entry, level = 0, path = []):
+    def getSection(self, entry, level = 0, path = None):
+        if path is None:
+            path = []
         result = []
         level += 1
         for section in entry['sections']:

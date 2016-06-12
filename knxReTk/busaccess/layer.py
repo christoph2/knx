@@ -228,7 +228,9 @@ class StandardFrame(RepresentationMixIn):
 
 class MessageBuffer(RepresentationMixIn):
 
-    def __init__(self, initial = []):
+    def __init__(self, initial = None):
+        if initial is None:
+            initial = []
         self._msg = MessageBuffer.createBuffer(MSG_LEN_STD, initial)
         self._length = len(initial)
         self._service = None

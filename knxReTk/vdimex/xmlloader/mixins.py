@@ -352,7 +352,9 @@ class ApplicationMixin(BaseMixin):
         self.convert(attrs, 'value', int)
         self.currentParameterType['restriction']['values'].append(attrs)
 
-    def addLoadControl(self, attrs, type_, converter = {}):
+    def addLoadControl(self, attrs, type_, converter = None):
+        if converter is None:
+            converter = {}
         attrs = self.convertAttributes(attrs)
         for k, v in converter.items():
             self.convert(attrs, k, v)

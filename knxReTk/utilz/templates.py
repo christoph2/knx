@@ -43,7 +43,9 @@ from knxReTk.utilz import strings
 indentText = lambda text, leftmargin = 0: '\n'.join(["%s%s" % ((" " * leftmargin), line, ) for line in text.splitlines()])
 
 
-def renderTemplate(filename = None, text = None, namespace = {}, leftMargin = 0, rightMargin = 80, formatExceptions = True, encoding = 'utf-8'):
+def renderTemplate(filename = None, text = None, namespace = None, leftMargin = 0, rightMargin = 80, formatExceptions = True, encoding = 'utf-8'):
+    if namespace is None:
+        namespace = {}
     if filename is None and text is None:
         raise AttributeError("Neither 'filename' nor 'text' specified.")
     buf = StringIO()
