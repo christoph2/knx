@@ -92,7 +92,7 @@ class Symbols(object):
                     self.memoryMap = section
                 else:
                     #print name #, section
-                    self._items.update(dict([(item.value, item) for item in section]))
+                    self._items.update({item.value: item for item in section})
     @property
     def interruptVectors(self):
         return self.sections[(self.mcu, 'Vectors')]
