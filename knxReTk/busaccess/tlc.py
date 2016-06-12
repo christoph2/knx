@@ -227,7 +227,7 @@ class StateMachine(SingletonBase):
         self.stopAcknowledgeTimeoutTimer()
 
     def __call__(self, event):
-        print "State: %s - Event: %s" % (StateType.toString(self._state), EventType.toString(event), ),
+        print "State: {0!s} - Event: {1!s}".format(StateType.toString(self._state), EventType.toString(event) ),
 
         eventHandler = self.EVENT_HANDLER[event]
         entry = StateMachine.STATE_TABLE[eventHandler(self)]
@@ -347,7 +347,7 @@ class StateMachine(SingletonBase):
         #  Destination = source (rbuffer), Sequence = 0 back to sender. */
 
         frame = self.message.asStandardFrame()
-        print "t_Disconnect_Req from: %04x to: %04x" % (frame.dest, frame.source, )
+        print "t_Disconnect_Req from: {0:04x} to: {1:04x}".format(frame.dest, frame.source )
         self.parent.t_Disconnect_Req(frame.dest, frame.source)
 
     def A11(self):
@@ -457,7 +457,7 @@ class StateMachine(SingletonBase):
         else:
             eventNum = 10
             print "NOT-OK, sourceAddr != connectionAddr!"
-            print "<<%04X>><<%04X>>" % (self.sourceAddress, self.connectionAddress, )
+            print "<<{0:04X}>><<{1:04X}>>".format(self.sourceAddress, self.connectionAddress )
         return eventNum
 
     def Event_Nak_Ind(self):

@@ -150,7 +150,7 @@ class BaseHandler(tornado.web.RequestHandler):
         self.conn = conn
 
     def set_default_headers(self):
-        self.set_header('Server', '%s/%s' % (SERVER_NAME, SERVER_VERSION))
+        self.set_header('Server', '{0!s}/{1!s}'.format(SERVER_NAME, SERVER_VERSION))
 
     def write(self, chunk, contentType = None):
         acceptedEncodings = self.request.headers.get('accept-encoding', '')

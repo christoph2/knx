@@ -111,10 +111,10 @@ def reformat(text, leftMargin = 1, rightMargin = 80):
         line = ' ' * (leftMargin - 1)
         for word in origLine.split():
             if (len(line) + len(word) - leftMargin + 1) <= (rightMargin - leftMargin):
-                line += "%s " % word
+                line += "{0!s} ".format(word)
             else:
                 resultLines.append(line.rstrip())
-                line = "%s%s " % ((' ' * (leftMargin - 1)) , word)
+                line = "{0!s}{1!s} ".format((' ' * (leftMargin - 1)) , word)
         resultLines.append(line.rstrip())
     return '\n'.join(resultLines)
 

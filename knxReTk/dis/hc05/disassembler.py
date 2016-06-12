@@ -75,7 +75,7 @@ class OperationList(list):
         return other.address in self.addresses
 
     def __str__(self):
-        return "<%s [%s] >" % (self.__class__.__name__, [v.address for v in self])
+        return "<{0!s} [{1!s}] >".format(self.__class__.__name__, [v.address for v in self])
 
     __repr__ = __str__
 
@@ -113,10 +113,10 @@ class Operation(Entry):
             label = self.label
             if isinstance(label, ValueProperty):
                 label  = label.name
-            label = "%s:" % label
+            label = "{0!s}:".format(label)
         else:
             label = self.label
-        return "$%04x %02x %s    %-20s %s %s" % (
+        return "${0:04x} {1:02x} {2!s}    {3:<20!s} {4!s} {5!s}".format(
             self.address, self.opcode, self.formatOperandData(), label, self.opcodeName, displayString
         )
 
@@ -125,9 +125,9 @@ class Operation(Entry):
     def formatOperandData(self):
         if self.operandData:
             if self.operandData > 0xff:
-                return "%02x %02x" % ((self.operandData & 0xff00) >> 8, (self.operandData & 0xff), )
+                return "{0:02x} {1:02x}".format((self.operandData & 0xff00) >> 8, (self.operandData & 0xff) )
             else:
-                return "%02x   " % self.operandData
+                return "{0:02x}   ".format(self.operandData)
         else:
             return "     "
 
@@ -135,7 +135,7 @@ class Operation(Entry):
         return ("", None)
 
     def immediate(self):
-        operand = '#%02x' % self.operandData
+        operand = '#{0:02x}'.format(self.operandData)
         return (operand, None)
 
     def direct(self):
@@ -147,10 +147,10 @@ class Operation(Entry):
             else:
                 relativeBranchOffset = op1 + 3
             destination = self.address + relativeBranchOffset
-            operand = "%s, $%04x" % (self.getLocationDir(op0), destination)
+            operand = "{0!s}, ${1:04x}".format(self.getLocationDir(op0), destination)
             # FIXME: Sprung-Behandlung.
         elif (self.opcode < 0x20):      # BSET/BCLR
-            operand = "%s" % self.getLocationDir(self.operandData)
+            operand = "{0!s}".format(self.getLocationDir(self.operandData))
             destination = None
         else:
             destination = self.operandData
@@ -158,7 +158,7 @@ class Operation(Entry):
         return (operand, destination)
 
     def extended(self):
-        operand = "%s" % self.getLocationExt(self.operandData)
+        operand = "{0!s}".format(self.getLocationExt(self.operandData))
         return (operand, self.operandData)
 
     def relative(self):
@@ -170,7 +170,7 @@ class Operation(Entry):
         if relativeBranchOffset == 0:
             operand = "*"
         else:
-            operand = "$%04x" % destination
+            operand = "${0:04x}".format(destination)
         return (operand, destination)
 
     def indexed(self):
@@ -178,12 +178,12 @@ class Operation(Entry):
 
     def indexedOne(self):
         destination = self.operandData
-        operand = "$%02x, X" % destination
+        operand = "${0:02x}, X".format(destination)
         return (operand, destination)
 
     def indexedTwo(self):
         destination = self.operandData
-        operand = "$%04x, X" % destination
+        operand = "${0:04x}, X".format(destination)
         return (operand, destination)
 
     def processes(self):
@@ -193,13 +193,13 @@ class Operation(Entry):
         if addr in Operation.symbols:
             return Operation.symbols[addr].name
         else:
-            return "$%04x" % addr
+            return "${0:04x}".format(addr)
 
     def getLocationDir(self, addr):
         if addr in Operation.symbols:
             return Operation.symbols[addr].name
         else:
-            return "$%02x" % addr
+            return "${0:02x}".format(addr)
 
 
 class IllegalOpcode(Exception): pass
@@ -242,10 +242,10 @@ class Disassembler(object):
             try:
                 line = self.disassembleLine(address)
             except IndexError as e:
-                    print "Index-Error while disassembling line: %s" % e
+                    print "Index-Error while disassembling line: {0!s}".format(e)
                     break
             except IllegalOpcode as e:
-                    print "Illegal Opcode while disassembling line: %s" % e
+                    print "Illegal Opcode while disassembling line: {0!s}".format(e)
                     break
             address += line.size
             #if not self.memoryExplorer.isExplored(origAddress): # and line not in lines:
@@ -269,7 +269,7 @@ class Disassembler(object):
         operandData = self.getWord(address + 1) if opcodeSize == 3 else self.getByte(address + 1) if opcodeSize == 2 else None
         operand = ""
         if op in ILLEGAL_OPCODES:
-            raise IllegalOpcode("0x%02x [Address: 0x%04x]" % (op, address, ))
+            raise IllegalOpcode("0x{0:02x} [Address: 0x{1:04x}]".format(op, address ))
         else:
             if address in Operation.symbols:
                 #print "0x%04x ==> %s" % (address, Operation.symbols[address])
@@ -347,7 +347,7 @@ class ImageDisassembler(object):
                 #if data:
                 #    print data
                 currentSegment = transformedMM[address]
-                print "    org $%04x        ; Segment-Length: %u Bytes \n" % (currentSegment.start,
+                print "    org ${0:04x}        ; Segment-Length: {1:d} Bytes \n".format(currentSegment.start,
                     currentSegment.end - currentSegment.start + 1
                 )
             if not me.isExplored(address):
@@ -360,14 +360,14 @@ class ImageDisassembler(object):
                         if addr in operations:
                             print operations[addr]  #disassembler.disassembleLine(addr)
                         else:
-                            print "%-18s fcb $%02x" % (" " * 18, self.disassembler.getByte(address))
+                            print "{0:<18!s} fcb ${1:02x}".format(" " * 18, self.disassembler.getByte(address))
                     code = []
                 address += 1
             else:
                 code.append(address)
                 if data:
                     for slice in slicer(self.disassembler.memory.getBlob(data[0], len(data)), 16, tuple):
-                        print "%s fcb    %s" % (" " * 18, ', '.join(["$%02x" % s for s in slice]))
+                        print "{0!s} fcb    {1!s}".format(" " * 18, ', '.join(["${0:02x}".format(s) for s in slice]))
                     data = []
                 if address in operations:
                     address += operations[address].size
@@ -411,7 +411,7 @@ from objutils import loads
 import pkgutil
 
 def getTemplate(template):
-    pkgutil.get_data('knxReTk', 'templates/bcu1/%s.tmpl' % template)
+    pkgutil.get_data('knxReTk', 'templates/bcu1/{0!s}.tmpl'.format(template))
 
 ttt = getTemplate('header')
 print ttt

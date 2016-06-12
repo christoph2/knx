@@ -385,7 +385,7 @@ def getLocalCode(locale):
     result = LOCALS.get(locale, ('?', '?', '?', ))[2]
     if '-' in result:
         l, r = result.split('-')
-        return "%s-%s" % (l.lower(), r.upper())
+        return "{0!s}-{1!s}".format(l.lower(), r.upper())
     else:
         return result
 

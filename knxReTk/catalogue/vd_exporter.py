@@ -122,7 +122,7 @@ class Dummy(object):
     def __str__(self):
         result = []
         for key in [x for x in dir(self) if not (x.startswith('_'))]:
-            result.append("%s = '%s'" % (key, getattr(self, key)))
+            result.append("{0!s} = '{1!s}'".format(key, getattr(self, key)))
         return '\n'.join(result)
 
 
@@ -231,10 +231,10 @@ class CatalogueReverser(object): # TODO: Strategy
 
         _, relpath = os.path.splitdrive(path)
         fname, _ = os.path.splitext(relpath)
-        self.outf = codecs.open('%s.xml' % fname, mode = 'w', encoding = "utf-8")
-        self.logFile = codecs.open('%s.log' % fname, mode = 'w', encoding = "utf-8")
+        self.outf = codecs.open('{0!s}.xml'.format(fname), mode = 'w', encoding = "utf-8")
+        self.logFile = codecs.open('{0!s}.log'.format(fname), mode = 'w', encoding = "utf-8")
         #self.logFile = sys.stdout
-        print 'TARGET FILE: %s.xml' % fname
+        print 'TARGET FILE: {0!s}.xml'.format(fname)
 
     def _getLine(self):
         line = unicode(self.data[self.pos], 'latin-1')
@@ -273,9 +273,9 @@ class CatalogueReverser(object): # TODO: Strategy
 
     def checkSignature(self):
         if self.data[0] != MAGIC_SIG:
-            raise FormatError("Catalogue doesn't start with '%s'." % MAGIC_SIG)
+            raise FormatError("Catalogue doesn't start with '{0!s}'.".format(MAGIC_SIG))
         if self.data[-1] != EOF_SIG:
-            raise FormatError("Catalogue doesn't end with '%s'." % EOF_SIG)
+            raise FormatError("Catalogue doesn't end with '{0!s}'.".format(EOF_SIG))
 
     def parseFileHeader(self):
         ATTRIBUTE_MAP = {
@@ -290,8 +290,8 @@ class CatalogueReverser(object): # TODO: Strategy
         for tag, content in filter(lambda x: len(x) == 2, [string.split(l, maxsplit = 1) for l in block[1:]]):
             setattr(header, ATTRIBUTE_MAP[tag], content)
         setattr(self, 'header', header)
-        print "HEADER: \n%s\n\n" % header
-        self.logFile.write("%s\n\n" % header)
+        print "HEADER: \n{0!s}\n\n".format(header)
+        self.logFile.write("{0!s}\n\n".format(header))
 
     def parseTables(self):
         idx = 0
@@ -300,7 +300,7 @@ class CatalogueReverser(object): # TODO: Strategy
         columnIdx = 0
         columnBuilder = ColumnBuilder()
         rowBuilder = RowBuilder()
-        self.outf.write("%s\n" % XML_DECL)
+        self.outf.write("{0!s}\n".format(XML_DECL))
         if hasattr(self.header, 'originalFilename'):
             originalFilename = self.header.originalFilename
         else:
@@ -316,7 +316,7 @@ class CatalogueReverser(object): # TODO: Strategy
             date = ''
         version = self.header.version
         rootTable = self.header.rootTable
-        self.outf.write('<CATALOGUE originalFilename="%s" creator="%s" date="%s" version="%s" rootTable="%s" >\n' % (
+        self.outf.write('<CATALOGUE originalFilename="{0!s}" creator="{1!s}" date="{2!s}" version="{3!s}" rootTable="{4!s}" >\n'.format(
             originalFilename, creator, date, version, rootTable)
         )
         while not finished:
@@ -333,10 +333,10 @@ class CatalogueReverser(object): # TODO: Strategy
                         TableNamesToNumbers[ma.group("name")].add(ma.group("tableNumber"))
 
                         tb = TableBuilder(ma.group("name"), ma.group("tableNumber"))
-                        self.outf.write("    <%sS>\n" % tb.name.upper())
+                        self.outf.write("    <{0!s}S>\n".format(tb.name.upper()))
                         self.state = STATE_COLUMN
                     else:
-                        raise FormatError("Expected table declaration [%u]: '%s'." % (lineNumber, line))
+                        raise FormatError("Expected table declaration [{0:d}]: '{1!s}'.".format(lineNumber, line))
                 elif self.state == STATE_COLUMN:
                     ma = COL_DESC.match(line)
                     if ma:
@@ -349,13 +349,13 @@ class CatalogueReverser(object): # TODO: Strategy
                             tableNumber = int(ma.group('tableNumber'))
                             rowNumber = int(ma.group('rowNumber'))
                             columnIdx = 1
-                            self.outf.write("        <%s>\n" % tb.name.upper())
+                            self.outf.write("        <{0!s}>\n".format(tb.name.upper()))
                             self.state = STATE_ROW
-                            self.logFile.write("%s[%u]\n" % (tb.name, tb.number))
-                            print("%s[%u]\n" % (tb.name, tb.number))
+                            self.logFile.write("{0!s}[{1:d}]\n".format(tb.name, tb.number))
+                            print("{0!s}[{1:d}]\n".format(tb.name, tb.number))
                             for column in tb.columns:
-                                self.logFile.write("    %s[%u]::%s %s\n" % (column.name, column.colNumber, column.type_, column.nulls))
-                                print("    %s[%u]::%s %s\n" % (column.name, column.colNumber, column.type_, column.nulls))
+                                self.logFile.write("    {0!s}[{1:d}]::{2!s} {3!s}\n".format(column.name, column.colNumber, column.type_, column.nulls))
+                                print("    {0!s}[{1:d}]::{2!s} {3!s}\n".format(column.name, column.colNumber, column.type_, column.nulls))
                             self.logFile.write("\n")
                 elif self.state == STATE_ROW:
                     columnBuilder.add(line)
@@ -381,9 +381,9 @@ class CatalogueReverser(object): # TODO: Strategy
                                 if value:
                                     #if isinstance(value, basestring):
                                     #    value = value.encode("utf-8")
-                                    self.outf.write("            <%s>%s</%s>\n" % (name, value, name))
+                                    self.outf.write("            <{0!s}>{1!s}</{2!s}>\n".format(name, value, name))
                             self.state = STATE_ROW_IND
-                            self.outf.write("        </%s>\n" % tb.name.upper())
+                            self.outf.write("        </{0!s}>\n".format(tb.name.upper()))
                 elif self.state == STATE_ROW_IND:
                     if not columnBuilder.finished:
                         raise Exception("Uups!")
@@ -393,10 +393,10 @@ class CatalogueReverser(object): # TODO: Strategy
                         rowNumber = int(ma.group('rowNumber'))
                         columnIdx = 1
                         self.state = STATE_ROW
-                        self.outf.write("        <%s>\n" % tb.name.upper())
+                        self.outf.write("        <{0!s}>\n".format(tb.name.upper()))
                     else:
-                        raise FormatError("Expected row indicator [%u]: '%s'." % (lineNumber, line))
-            self.outf.write("    </%sS>\n" % tb.name.upper())
+                        raise FormatError("Expected row indicator [{0:d}]: '{1!s}'.".format(lineNumber, line))
+            self.outf.write("    </{0!s}S>\n".format(tb.name.upper()))
         self.outf.write("</CATALOGUE>\n")
 
     def parseTableHeader(self):

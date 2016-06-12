@@ -114,13 +114,13 @@ PROPERTY_DATA_TYPES = {
 
 def objectType(value):
     result = OBJECT_TYPES.get(value, '')
-    return "%s[%u]" % (result, value)
+    return "{0!s}[{1:d}]".format(result, value)
 
 def propertyIdentifier(value):
     result = PROPERTY_IDENTIFIERS.get(value, '')
-    return "%s[%u]" % (result, value)
+    return "{0!s}[{1:d}]".format(result, value)
 
 def propertyDataType(value):
     result = PROPERTY_DATA_TYPES.get(value, '')
-    return "%s[%u]" % (result, value)
+    return "{0!s}[{1:d}]".format(result, value)
 

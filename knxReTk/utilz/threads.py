@@ -51,7 +51,7 @@ class Thread(threading.Thread):
             thread.quit()
 
     def getName(self):
-        return "%s-%u" % (self.__class__.__name__, self.ident)
+        return "{0!s}-{1:d}".format(self.__class__.__name__, self.ident)
 
     def run(self):
         #print "Starting {0} thread.".format(self.getName())

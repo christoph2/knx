@@ -67,7 +67,7 @@ class Memory(object):
         elif endianess == Memory.LITTLE_ENDIAN:
             return getL
         else:
-            raise ValueError("Invalid endianess '%s'." % endianess)
+            raise ValueError("Invalid endianess '{0!s}'.".format(endianess))
 
     def getBlob(self, addr, size):
         return self._image[addr : addr + size]
@@ -103,7 +103,7 @@ class ReadWriteMemory(Memory):
         elif endianess == Memory.LITTLE_ENDIAN:
             return setL
         else:
-            raise ValueError("Invalid endianess '%s'." % endianess)
+            raise ValueError("Invalid endianess '{0!s}'.".format(endianess))
 
 
 ##

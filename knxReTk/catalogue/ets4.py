@@ -52,13 +52,13 @@ def escape_(value):
         result = []
         for ch in value:
             if not ch.isalnum():
-                result.append(".%02X" % ord(ch))
+                result.append(".{0:02X}".format(ord(ch)))
             else:
                 result.append(ch)
         return ''.join(result)
 
 def nonAlNumReplacer(match):
-    return ".%X" % ord(match.group())
+    return ".{0:X}".format(ord(match.group()))
 
 def escape(text):
     return NON_ALNUM.sub(nonAlNumReplacer, text)

@@ -68,7 +68,7 @@ class XMLHandler(ContentHandler):
         self.level += 1
         self.tags.append(name)
 
-        callback = "on%sStart" % name
+        callback = "on{0!s}Start".format(name)
         if hasattr(self, callback):
             getattr(self, callback)(name, attrs)
         else:
@@ -89,7 +89,7 @@ class XMLHandler(ContentHandler):
     def endElement(self, name):
         if ':' in name:
             namespace, name = name.split(':')
-        callback = "on%sEnd" % name
+        callback = "on{0!s}End".format(name)
         if hasattr(self, callback):
             getattr(self, callback)(name)
         #self.currentElement['textContent'] = ''
