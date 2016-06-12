@@ -218,7 +218,7 @@ class NameMapper(object):
     def __init__(self, attrs):
         for k, v in attrs.items():
             setattr(self, k, v)
-        self.attribute_map_inverse = dict([(v, k) for k, v in self.attribute_map.items()])
+        self.attribute_map_inverse = {v: k for k, v in self.attribute_map.items()}
 
     def __getattr__(self, attr):
         if attr in self.attribute_map:
