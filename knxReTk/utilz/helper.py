@@ -32,7 +32,7 @@ __version__ = '0.1.0'
 import operator
 
 def hexDump(data):
-    return ', '.join(["0x%02x" % x for x in data])
+    return ', '.join(["0x{0:02x}".format(x) for x in data])
 
 checksum = lambda frame: reduce(operator.xor, frame, 0xff)
 

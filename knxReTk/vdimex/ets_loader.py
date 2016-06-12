@@ -53,7 +53,7 @@ try:
     mongoClient = getMongoClient()
     bootstrap.init(mongoClient)
 except Exception as e:
-    print "Problem with Database Connection: '%s'." % str(e)
+    print "Problem with Database Connection: '{0!s}'.".format(str(e))
     print "Exiting."
     sys.exit(1)
 

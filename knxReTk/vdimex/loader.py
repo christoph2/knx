@@ -129,7 +129,7 @@ class Dummy(object):
     def __str__(self):
         result = []
         for key in [x for x in dir(self) if not (x.startswith('_'))]:
-            result.append("%s = '%s'" % (key, getattr(self, key)))
+            result.append("{0!s} = '{1!s}'".format(key, getattr(self, key)))
         return '\n'.join(result)
 
 
@@ -284,9 +284,9 @@ class CatalogueReverser(object):
 
     def checkSignature(self):
         if self.data[0] != MAGIC_SIG:
-            raise FormatError("Catalogue doesn't start with '%s'." % MAGIC_SIG)
+            raise FormatError("Catalogue doesn't start with '{0!s}'.".format(MAGIC_SIG))
         if self.data[-1] != EOF_SIG:
-            raise FormatError("Catalogue doesn't end with '%s'." % EOF_SIG)
+            raise FormatError("Catalogue doesn't end with '{0!s}'.".format(EOF_SIG))
 
     def parseFileHeader(self):
         ATTRIBUTE_MAP = {
@@ -341,7 +341,7 @@ class CatalogueReverser(object):
 
                         self.state = STATE_COLUMN
                     else:
-                        raise FormatError("Expected table declaration [%u]: '%s'." % (lineNumber, line))
+                        raise FormatError("Expected table declaration [{0:d}]: '{1!s}'.".format(lineNumber, line))
                 elif self.state == STATE_COLUMN:
                     ma = COL_DESC.match(line)
                     if ma:
@@ -388,7 +388,7 @@ class CatalogueReverser(object):
                         columnIdx = 1
                         self.state = STATE_ROW
                     else:
-                        raise FormatError("Expected row indicator [%u]: '%s'." % (lineNumber, line))
+                        raise FormatError("Expected row indicator [{0:d}]: '{1!s}'.".format(lineNumber, line))
             self.endTable(tb.name)
 
         self.onFinished()

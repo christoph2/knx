@@ -43,12 +43,12 @@ def homeDirectory():
 def projectConfigurationDirectory(project):
     path = os.path.join(homeDirectory(), project)
     if not os.access(path, os.F_OK):
-        logger.info("Creating configuration directory '%s'" % path)
+        logger.info("Creating configuration directory '{0!s}'".format(path))
         os.mkdir(path)
         print
     return path
 
 def readConfigData(project, fname):
-    return pkgutil.get_data(project, 'config/%s' % fname)
+    return pkgutil.get_data(project, 'config/{0!s}'.format(fname))
 
 

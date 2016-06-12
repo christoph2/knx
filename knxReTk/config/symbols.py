@@ -70,7 +70,7 @@ class Symbols(object):
                     if arraySize:
                         #self.sections[currentSection].append(ArrayProperty(prop, value, int(arraySize), ))
                         for offset in range(int(arraySize)):
-                            self.sections[currentSection].append(ValueProperty("%s + %u" % (prop, offset), value + offset, ))
+                            self.sections[currentSection].append(ValueProperty("{0!s} + {1:d}".format(prop, offset), value + offset, ))
                     else:
                         self.sections[currentSection].append(ValueProperty(prop, value, ))
                 else:
@@ -84,7 +84,7 @@ class Symbols(object):
                         x = True if 'X' in attribs else False
                         self.sections[currentSection].append(MemorySection(start, end, r, w, x, ))
                     else:
-                        print "*** NO MATCH [%s] ***" % line
+                        print "*** NO MATCH [{0!s}] ***".format(line)
         self._items = {}
         for name, section in self.sections.items():
             if (name[0] == mask or name[0] == mcu) or (name[0] == 'EIBCommon' or name[0] == 'EEPROMProlog'):

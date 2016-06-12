@@ -40,7 +40,7 @@ from mako import exceptions
 
 from knxReTk.utilz import strings
 
-indentText = lambda text, leftmargin = 0: '\n'.join(["%s%s" % ((" " * leftmargin), line, ) for line in text.splitlines()])
+indentText = lambda text, leftmargin = 0: '\n'.join(["{0!s}{1!s}".format((" " * leftmargin), line ) for line in text.splitlines()])
 
 
 def renderTemplate(filename = None, text = None, namespace = {}, leftMargin = 0, rightMargin = 80, formatExceptions = True, encoding = 'utf-8'):

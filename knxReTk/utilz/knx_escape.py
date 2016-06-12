@@ -52,7 +52,7 @@ def escape(value):
         result = []
         for ch in value:
             if not ch.isalnum():
-                result.append(".%02X" % ord(ch))
+                result.append(".{0:02X}".format(ord(ch)))
             else:
                 result.append(ch)
         return ''.join(result)

@@ -296,7 +296,7 @@ class DispatcherThread(Thread):
             if message:
                 serviceHandler = self.layer.SERVICES.get(message.service)
                 if serviceHandler is None:
-                    raise ServiceError("Invalid Service Code: 0x%02x" % message.service)
+                    raise ServiceError("Invalid Service Code: 0x{0:02x}".format(message.service))
                 serviceHandler(self.layer, message)
                 self.layer.queue.task_done()
 
@@ -318,7 +318,7 @@ class Layer(SingletonBase):
         else:
             serviceGroup = message.service & 0xf0
             if serviceGroup not in Layer.serviceRegistry:
-                raise ServiceError("Service Group unknwon: 0x%02x" % serviceGroup)
+                raise ServiceError("Service Group unknwon: 0x{0:02x}".format(serviceGroup))
             instance, services = Layer.serviceRegistry.get(serviceGroup)
             instance.queue.put(message, block = True)
 

@@ -64,9 +64,9 @@ class RepresentationMixIn(object):
     def __repr__(self):
         keys = [k for k in self.__dict__ if not (k.startswith('__') and k.endswith('__'))]
         result = []
-        result.append("%s {" % self.__class__.__name__)
+        result.append("{0!s} {{".format(self.__class__.__name__))
         for key in keys:
-            line = "    %s = '%s'" % (key, getattr(self, key))
+            line = "    {0!s} = '{1!s}'".format(key, getattr(self, key))
             result.append(line)
         result.append("}")
         return '\n'.join(result)
@@ -224,7 +224,7 @@ class NameMapper(object):
         if attr in self.attribute_map:
             return getattr(self, self.attribute_map[attr])
         else:
-            raise AttributeError("%s" % attr)
+            raise AttributeError("{0!s}".format(attr))
 
 
 class Application(Table):
@@ -237,8 +237,8 @@ class Application(Table):
 
     @property
     def applicationId(self):
-        appId = "M-%04X_A-%X-%X" % (self.manufacturer_id, self.device_type, int(self.program_version))
-        appId = "%s-%s" % (appId, hashlib.sha1(appId).hexdigest()[-4 : ].upper())
+        appId = "M-{0:04X}_A-{1:X}-{2:X}".format(self.manufacturer_id, self.device_type, int(self.program_version))
+        appId = "{0!s}-{1!s}".format(appId, hashlib.sha1(appId).hexdigest()[-4 : ].upper())
         return appId
 
 
@@ -252,36 +252,36 @@ class Device(Table):
 
     @property
     def hardwareId(self):
-        hardwareId = "M-%04X_H-%s-%u" % (self.hardwareProduct.manufacturer_id,
+        hardwareId = "M-{0:04X}_H-{1!s}-{2:d}".format(self.hardwareProduct.manufacturer_id,
             (knx_escape.escape(self.hardwareProduct.product_serial_number)),
             self.hardwareProduct.product_version_number
         )
         if self.hardwareProduct.original_manufacturer_id:
-            hardwareId = "%s-O%04X" % (hardwareId, self.hardwareProduct.original_manufacturer_id)
+            hardwareId = "{0!s}-O{1:04X}".format(hardwareId, self.hardwareProduct.original_manufacturer_id)
         return hardwareId
 
     @property
     def hardwareProductId(self):
         try:
-            hardwareProductId = "%s_HP-%04X-%02X"% (self.hardwareId, self.application.device_type, int(self.application.program_version),)
-            hardwareProductId = "%s-%s" % (hardwareProductId, hashlib.sha1(hardwareProductId).hexdigest()[-4 : ].upper())
+            hardwareProductId = "{0!s}_HP-{1:04X}-{2:02X}".format(self.hardwareId, self.application.device_type, int(self.application.program_version))
+            hardwareProductId = "{0!s}-{1!s}".format(hardwareProductId, hashlib.sha1(hardwareProductId).hexdigest()[-4 : ].upper())
         except AttributeError as e:
             # In this case no 'application_program' exists!
             if self.hardwareProduct.original_manufacturer_id:
-                hardwareProductId = "%s_O%04u_HP" % (self.hardwareId, int(self.hardwareProduct.original_manufacturer_id), )
+                hardwareProductId = "{0!s}_O{1:04d}_HP".format(self.hardwareId, int(self.hardwareProduct.original_manufacturer_id) )
             else:
-                hardwareProductId = "%s_HP" % (self.hardwareId, )
+                hardwareProductId = "{0!s}_HP".format(self.hardwareId )
         return hardwareProductId
 
     @property
     def catalogItemId(self):
-        catalogItemId = "%s_CI-%s-%u" % (self.hardwareProductId, knx_escape.escape(self.catalogEntry.order_number),
+        catalogItemId = "{0!s}_CI-{1!s}-{2:d}".format(self.hardwareProductId, knx_escape.escape(self.catalogEntry.order_number),
             self.hardwareProduct.product_version_number)
         return catalogItemId
 
     @property
     def productId(self):
-        productId = "%s_P-%s" % (self.hardwareId, knx_escape.escape(self.catalogEntry.order_number), )
+        productId = "{0!s}_P-{1!s}".format(self.hardwareId, knx_escape.escape(self.catalogEntry.order_number) )
         return productId
 
 
@@ -297,7 +297,7 @@ class CatalogSectionMapper(NameMapper):
 
     def __init__(self, attrs, numbers):
         super(CatalogSectionMapper, self).__init__(attrs)
-        self._identifier = "M-%04u_CS-%s" % (self.manufacturer_id, '-'.join(numbers + [self.Number]))
+        self._identifier = "M-{0:04d}_CS-{1!s}".format(self.manufacturer_id, '-'.join(numbers + [self.Number]))
 
     @property
     def identifier(self):
@@ -445,11 +445,11 @@ class CatalogBuilder(GenericBuilder):
                 hardware2Programs = [], products = [],
             )
             if dev.hardwareProduct.original_manufacturer_id:
-                hardware['originalManufacturer'] = "M-%04X" % dev.hardwareProduct.original_manufacturer_id
+                hardware['originalManufacturer'] = "M-{0:04X}".format(dev.hardwareProduct.original_manufacturer_id)
             products = list(self.db.catalog_entry.find({"product_id": dev.catalogEntry.product_id}, sort = [("catalog_entry_id", mongo.ASCENDING)]))
             for product in products:
 
-                productId = "%s2_P-%s" % (dev.hardwareId, knx_escape.escape(product['order_number']))
+                productId = "{0!s}2_P-{1!s}".format(dev.hardwareId, knx_escape.escape(product['order_number']))
 
                 productDict = dict(_id = productId, text = product['entry_name'], orderNumber = product['order_number'],
                     isRailMounted = True if product['din_flag'] else False, widthInMillimeter = product['entry_width_in_millimeters'],
@@ -462,15 +462,15 @@ class CatalogBuilder(GenericBuilder):
                 if dt:
                     deviceType = dt['device_type']
                     programVersion = dt['program_version']
-                    programNumber = "M-%04X_H-%s-%u_HP-%04X-%02X" % (product['manufacturer_id'], knx_escape.escape(dev.hardwareProduct.product_serial_number), dev.hardwareProduct.product_version_number, deviceType, int(programVersion))
-                    programNumber = "%s-%s" % (programNumber, hashlib.sha1(programNumber).hexdigest()[-4 : ].upper())
-                    print '<Hardware2Program %s />' % (programNumber)
+                    programNumber = "M-{0:04X}_H-{1!s}-{2:d}_HP-{3:04X}-{4:02X}".format(product['manufacturer_id'], knx_escape.escape(dev.hardwareProduct.product_serial_number), dev.hardwareProduct.product_version_number, deviceType, int(programVersion))
+                    programNumber = "{0!s}-{1!s}".format(programNumber, hashlib.sha1(programNumber).hexdigest()[-4 : ].upper())
+                    print '<Hardware2Program {0!s} />'.format((programNumber))
                 if p2p['registration_year']:
                     year = p2p['registration_year']
                     if year < 1900:
                         year += 1900
                     if p2p['prod2prog_status_code'] in (10, 20):
-                        print "        *** Reg-Number: %u/%u" % (year, p2p['registration_number'])
+                        print "        *** Reg-Number: {0:d}/{1:d}".format(year, p2p['registration_number'])
             self.db.hardware.update({"_id": hardware['_id']}, hardware, upsert = True, safe = True)
 
 
@@ -532,22 +532,22 @@ class ApplicationBuilder(GenericBuilder):
             pass
         # ParameterTypes
         for key, item in sorted(app.parameterTypes.items(), key = lambda x: x[0]):
-            parameterTypeId = "%s_PT-%s" % (app.applicationId, knx_escape.escape(item['parameter_type_name']))
+            parameterTypeId = "{0!s}_PT-{1!s}".format(app.applicationId, knx_escape.escape(item['parameter_type_name']))
             atNumber = item['atomic_type_number']
-            print '<ParameterType Id="%s" Name="%s" InternalDescription="%s">' % (parameterTypeId, item['parameter_type_name'], item['parameter_type_description'] or '')
+            print '<ParameterType Id="{0!s}" Name="{1!s}" InternalDescription="{2!s}">'.format(parameterTypeId, item['parameter_type_name'], item['parameter_type_description'] or '')
             if atNumber == 1:
-                print '   <TypeNumber SizeInBit="%u" Type="unsignedInt" minInclusive="%u" maxInclusive="%u" />' % (item['parameter_type_size'], item['parameter_minimum_value'], item['parameter_maximum_value'])
+                print '   <TypeNumber SizeInBit="{0:d}" Type="unsignedInt" minInclusive="{1:d}" maxInclusive="{2:d}" />'.format(item['parameter_type_size'], item['parameter_minimum_value'], item['parameter_maximum_value'])
             elif atNumber == 4:
-                print '   <TypeRestriction Base="Value" SizeInBit="%u">' % (item['parameter_type_size'], )
+                print '   <TypeRestriction Base="Value" SizeInBit="{0:d}">'.format(item['parameter_type_size'] )
                 for value in sorted(item['listOfValues'], key = lambda x: x['display_order']):
-                    enumId = "%s_EN-%u" % (parameterTypeId, value['real_value'])
-                    print '      <Enumeration Text="%s" Value="%s" Id="%s" DisplayOrder="%u" />' % (value['displayed_value'], value['real_value'], enumId, value['display_order'])
+                    enumId = "{0!s}_EN-{1:d}".format(parameterTypeId, value['real_value'])
+                    print '      <Enumeration Text="{0!s}" Value="{1!s}" Id="{2!s}" DisplayOrder="{3:d}" />'.format(value['displayed_value'], value['real_value'], enumId, value['display_order'])
                 print '   </TypeRestriction>'
             elif atNumber == 5:
-                print '   <TypeRestriction Base="BinaryValue" SizeInBit="%u">' % (item['parameter_type_size'], )
+                print '   <TypeRestriction Base="BinaryValue" SizeInBit="{0:d}">'.format(item['parameter_type_size'] )
                 for value in sorted(item['listOfValues'], key = lambda x: x['display_order']):
-                    enumId = "%s_EN-%u" % (parameterTypeId, value['real_value'])
-                    print '      <Enumeration Text="%s" Value="%s" Id="%s" DisplayOrder="%u" BinaryValue="%s" />' % (value['displayed_value'], value['real_value'], enumId, value['display_order'], value['binary_value'])
+                    enumId = "{0!s}_EN-{1:d}".format(parameterTypeId, value['real_value'])
+                    print '      <Enumeration Text="{0!s}" Value="{1!s}" Id="{2!s}" DisplayOrder="{3:d}" BinaryValue="{4!s}" />'.format(value['displayed_value'], value['real_value'], enumId, value['display_order'], value['binary_value'])
                 print '   </TypeRestriction>'
             elif atNumber == 0:
                 print "   <TypeNone />"

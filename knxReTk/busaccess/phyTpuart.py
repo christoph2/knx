@@ -269,12 +269,12 @@ def makeComparator(mask, compareTo):
 class State(SingletonBase):
 
     def __str_(self):
-        return "State[%s]" % self.__class__.__name__
+        return "State[{0!s}]".format(self.__class__.__name__)
 
 class Event(SingletonBase):
 
     def __str_(self):
-        return "Event[%s]" % self.__class__.__name__
+        return "Event[{0!s}]".format(self.__class__.__name__)
 
 
 ##
@@ -385,7 +385,7 @@ class TransmissionCommand(BaseProcessor):
         else:
             #assert (octet & REPETITION_MASK) == (self.parent.sendBuffer[0] & REPETITION_MASK)
             if not ((octet & REPETITION_MASK) == (self.parent.sendBuffer[0] & REPETITION_MASK)):
-                print "Uups [first]: '%02x' != '%02x'" % (octet, self.parent.sendBuffer[0], )
+                print "Uups [first]: '{0:02x}' != '{1:02x}'".format(octet, self.parent.sendBuffer[0] )
             self.idx = 1
             self.repetitionCounter += 1
             self.action = self.consecutive
@@ -415,7 +415,7 @@ class TransmissionCommand(BaseProcessor):
             #print "%02x %02x" % (octet, self.parent.sendBuffer[0])
             #assert octet & REPETITION_MASK == self.parent.sendBuffer[0] & REPETITION_MASK
             if not ((octet & REPETITION_MASK) == (self.parent.sendBuffer[0] & REPETITION_MASK)):
-                print "Uups []first: '%02x' != '%02x'" % (octet, self.parent.sendBuffer[0], )
+                print "Uups []first: '{0:02x}' != '{1:02x}'".format(octet, self.parent.sendBuffer[0] )
         self.repeated = not (octet & ~REPETITION_MASK == ~REPETITION_MASK)
         #if self.repeated:
         #    print "   *** Repeated!!"
